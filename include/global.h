@@ -33,6 +33,9 @@ static inline uint32_t gettid() {
 #define METADATA_SIZE (1024 )
 #define LOCALLOGSIZE (1024)
 #define DISTRIBUTEDLOGSIZE (1024)
+//add:xurui
+#define DSM_MAX_ROWKEY_COLUMN_NUMBER 1024
+//add:e
 
 // #define TRANSACTION_2PC 1
 #define TRANSACTION_CD 1
@@ -217,6 +220,22 @@ typedef struct : GeneralReceiveBuffer {
     uint16_t parentNodeID;
     DirectoryMeta meta;
 } ReadDirectoryMetaReceiveBuffer;
+
+//add:xurui
+struct DSMCellInfo
+      {
+        uint64_t column_id_;
+        int value_[DSM_MAX_ROWKEY_COLUMN_NUMBER];/* one row key has max column number */
+      };
+struct DSMRow
+      {
+        int32_t cell_num_;
+        int32_t row_key_len_;
+        uint64_t table_id_;
+        int row_key_obj_array_[DSM_MAX_ROWKEY_COLUMN_NUMBER];
+        DSMCellInfo cells_[0];
+      };
+//add:e
 
 /* A global queue manager. */
 template <typename T>

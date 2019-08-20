@@ -25,7 +25,7 @@ bool SC_Skiplist::Insert(RangeInformation* block_list, uint8_t block_num)
         strcpy(key.start_key,block_list[i].start_key);
 
         if(NULL == (node = skiplist_.Get(key)))
-        {          
+        {
             Value value;
 //            pair<Key,Value> keyvalue;
 
@@ -72,6 +72,7 @@ bool SC_Skiplist::Insert(RangeInformation* block_list, uint8_t block_num)
             node->keyvalue.second.latest_version_index++;
             node->keyvalue.second.version_count++;
             node->keyvalue.second.valid = true;
+            printf("duplicated endkey=%ld",node->keyvalue.second.version_count);
         }
 
     }

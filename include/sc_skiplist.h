@@ -15,7 +15,7 @@ using namespace std;
 
 struct Key
 {
-    char start_key[KEY_LENGTH];\
+    char start_key[KEY_LENGTH];
 
     Key()
     {
@@ -59,7 +59,7 @@ struct VersionInfo
 
     VersionInfo()
     {
-        version = 0;;
+        version = 0;
         address = -1;
         ref_count = 0;
     }

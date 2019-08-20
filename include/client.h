@@ -37,6 +37,8 @@ public:
     bool IndexWrite(char * start_key, char* end_key, uint64_t address);
     bool Read(uint64_t value, uint64_t size, char* start_key, char* end_key);
     bool RangeCover(char * SourceBuffer, uint64_t BufferSize = CLIENT_MESSAGE_SIZE, uint16_t DesNodeID = 1);
+    virtual int GetNextRow(GeneralRequestBuffer *rec, int i, const DSMRow *&row);
+    bool Cover(char* start_key, char* end_key);
     //add:e
     uint64_t ContractSendBuffer(GeneralSendBuffer *send);
 };

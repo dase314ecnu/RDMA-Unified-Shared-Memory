@@ -68,6 +68,7 @@ uint64_t Client::BlockWrite(uint64_t SourceBuffer, uint64_t BufferSize, uint32_t
   {
     addr_size--;
     printf("getRdmaSocketInstance()->RdmaWrite(NodeID, SourceBuffer, DesBuffer, BufferSize, imm, TaskID)\n");
+//    printf("getRdmaSocketInstance()->RdmaWrite(%d, %d, %d, %d, %d, %d)\n",NodeID,SourceBuffer,DesBuffer, BufferSize, imm, TaskID);
     return DesBuffer;
   }
   printf("addr_size==0\n");
@@ -128,8 +129,94 @@ bool Client::IndexWrite(char * start_key, char* end_key, uint64_t address){//uin
     return false;
 }
 
+//bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
+//{
+//    char recieve[CLIENT_MESSAGE_SIZE];
+//    memset(recieve,0,CLIENT_MESSAGE_SIZE);
+//    uint64_t SendPoolAddr = mm;
+//    GeneralRequestBuffer *send = (GeneralRequestBuffer*)SendPoolAddr;
+//    send->message = MESSAGE_SCAN;
+//    memcpy(send->range[0].start_key,start_key,KEY_LENGTH);
+//    memcpy(send->range[0].end_key,end_key,KEY_LENGTH);
+//    //send->range[0].start_key[0]='1';
+//    //send->range[0].end_key[0]='5';
+//    send->range[0].address = 0;
+//    send->size = 0;
+//    send->flag = false;
+//    if(!RdmaCall(1, (char*)SendPoolAddr, (uint64_t)CLIENT_MESSAGE_SIZE, (char*)recieve, (uint64_t)CLIENT_MESSAGE_SIZE))
+//    {
+//        return false;
+//    }
+//    else
+//    {
+//        GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
+//        printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[0].address,
+//                rec->range[0].version);
+//        if(!socket->InboundHamal(0,value,1,rec->range[0].address,size))
+//        {
+//            return false;
+//        }
+//        else
+//        {
+//            printf("Read:%s\n",value);
+//            return true;
+//        }
+//    }
+//    //sleep(1);
+//}
 bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
 {
+    char recieve[CLIENT_MESSAGE_SIZE];
+    memset(recieve,0,CLIENT_MESSAGE_SIZE);
+    uint64_t SendPoolAddr = mm;
+    GeneralRequestBuffer *send = (GeneralRequestBuffer*)SendPoolAddr;
+    send->message = MESSAGE_SCAN;
+    for(int i = 0; i <= send->size; i++){
+        memcpy(send->range[i].start_key,start_key,KEY_LENGTH);
+        memcpy(send->range[i].end_key,end_key,KEY_LENGTH);
+        //send->range[0].start_key[0]='1';
+        //send->range[0].end_key[0]='5';
+        send->range[i].address = 0;
+        send->size = 0;
+        send->flag = false;
+        if(!RdmaCall(1, (char*)SendPoolAddr, (uint64_t)CLIENT_MESSAGE_SIZE, (char*)recieve, (uint64_t)CLIENT_MESSAGE_SIZE))
+        {
+            return false;
+        }
+        else
+        {
+            GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
+            printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[i].address,
+                    rec->range[i].version);
+            if(!socket->InboundHamal(0,value,1,rec->range[i].address,size))
+            {
+                return false;
+            }
+            else
+            {
+                //test for GetNextRow
+                //rec->range[i].GetNextRow();
+                printf("Read:%s\n",value);
+                return true;
+            }
+        }
+//        if(Cover(start_key,end_key)){
+//            printf("Read:%s\n",value);
+//            return true;
+//        }
+//        else
+//            return false;
+    }
+
+    //sleep(1);
+}
+
+//test for interface Client::Cover
+bool Client::Cover(char* start_key, char* end_key){
+    char value[BLOCK_SIZE];
+    memset(value,0,BLOCK_SIZE);
+    uint64_t size = BLOCK_SIZE;
+
     char recieve[CLIENT_MESSAGE_SIZE];
     memset(recieve,0,CLIENT_MESSAGE_SIZE);
     uint64_t SendPoolAddr = mm;
@@ -149,80 +236,45 @@ bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
     else
     {
         GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
-        printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[0].address,
-                rec->range[0].version);
-        if(!socket->InboundHamal(0,value,1,rec->range[0].address,size))
+        if(!socket->InboundHamal(0,(uint64_t)value,1,rec->range[0].address,size))
         {
             return false;
         }
         else
         {
-            //printf("Read:%s\n",value);
+            printf("Range is covered!\n",value);
             return true;
         }
     }
-    //sleep(1);
+}
+
+int Client::GetNextRow(GeneralRequestBuffer *rec, int i, const DSMRow *&row){
+//    if(Firsttime){
+//        //receive  Read()
+//    }
+//    else{
+//        //while(block_endkey == last key)
+//        //BlockIterator
+//    }
+
+      DSMRow cur_row_;
+      int ret = SUCCESS;
+//      ret = rec->range[0].get_next_row(cur_row_);   //rec->range[i]:row_store
+//      if (DSM_ITER_END == ret)
+//      {
+//        printf("end of iteration!\n");
+//      }
+//      else if (SUCCESS != ret)
+//      {
+//        printf("fail to get next row from row store.\n");
+//      }
+//      else
+//      {
+//        row = &cur_row_;
+//      }
+      return ret;
 }
 //add:e
-
-//bool Client::RdmaCall(uint16_t DesNodeID, char *bufferSend, uint64_t lengthSend, char *bufferReceive, uint64_t lengthReceive) {
-//    uint32_t ID = __sync_fetch_and_add( &taskID, 1 ), temp;
-//    uint64_t sendBuffer, receiveBuffer, remoteRecvBuffer;
-//    uint16_t offset = 0;
-//    uint32_t imm = (uint32_t)socket->getNodeID();
-//    struct  timeval startt, endd;
-//    unsigned long diff, tempCount = 0;
-//    GeneralRequestBuffer *send = (GeneralRequestBuffer*)bufferSend;
-//    lengthReceive -= ContractSendBuffer(send);
-//    send->taskID = ID;
-//    send->sourceNodeID = socket->getNodeID();
-//    send->sizeReceiveBuffer = lengthReceive;
-//    if (isServer) {
-//        offset = mem->getServerSendAddress(DesNodeID, &sendBuffer);
-//        // printf("offset = %d\n", offset);
-//        receiveBuffer = mem->getServerRecvAddress(socket->getNodeID(), offset);
-//        remoteRecvBuffer = receiveBuffer - mm;
-//    } else {
-//        sendBuffer = mm;
-//        receiveBuffer = mm;
-//        remoteRecvBuffer = (socket->getNodeID() - conf->getServerCount() - 1) * CLIENT_MESSAGE_SIZE;
-//    }
-//    GeneralRequestBuffer *recv = (GeneralRequestBuffer*)receiveBuffer;
-//    if (isServer)
-//        recv->message = MESSAGE_INVALID;
-//    memcpy((void *)sendBuffer, (void *)bufferSend, lengthSend);
-//    _mm_clflush(recv);
-//    asm volatile ("sfence\n" : : );
-//    temp = (uint32_t)offset;
-//    imm = imm + (temp << 16);
-//    Debug::notifyError("sendBuffer = %lx, receiveBuffer = %lx, remoteRecvBuffer = %lx, ReceiveSize = %d",
-//        sendBuffer, receiveBuffer, remoteRecvBuffer, lengthReceive);
-
-//    socket->_RdmaBatchWrite(DesNodeID, sendBuffer, remoteRecvBuffer, lengthSend, imm, 1);
-//    if (isServer) {
-//        while (recv->message == MESSAGE_INVALID || recv->message != MESSAGE_RESPONSE)
-//            ;
-//    } else {
-////        gettimeofday(&startt,NULL);
-//        while (recv->message != MESSAGE_RESPONSE) {
-////            gettimeofday(&endd,NULL);
-////            diff = 1000000 * (endd.tv_sec - startt.tv_sec) + endd.tv_usec - startt.tv_usec;
-////            if (diff > 1000000) {
-////                Debug::notifyError("Send the Fucking Message Again.");
-////                ExtentWriteSendBuffer *tempsend = (ExtentWriteSendBuffer *)sendBuffer;
-////                tempsend->offset = (uint64_t)tempCount;
-////                tempCount += 1;
-////                socket->_RdmaBatchWrite(DesNodeID, sendBuffer, remoteRecvBuffer, lengthSend, imm, 1);
-////                gettimeofday(&startt,NULL);
-////                diff = 0;
-////            }
-//        }
-//    }
-
-
-//    memcpy((void*)bufferReceive, (void *)receiveBuffer, lengthReceive);
-//    return true;
-//}
 
 bool Client::RdmaCall(uint16_t DesNodeID, char *bufferSend, uint64_t lengthSend, char *bufferReceive, uint64_t lengthReceive) {
     uint32_t ID = __sync_fetch_and_add( &taskID, 1 ), temp;
@@ -244,6 +296,7 @@ bool Client::RdmaCall(uint16_t DesNodeID, char *bufferSend, uint64_t lengthSend,
     } else {
         sendBuffer = mm;
         receiveBuffer = mm;
+        //拿到server分配好的地址
         remoteRecvBuffer = (socket->getNodeID() - conf->getServerCount() - 1) * CLIENT_MESSAGE_SIZE;
     }
     GeneralReceiveBuffer *recv = (GeneralReceiveBuffer*)receiveBuffer;

@@ -7,12 +7,18 @@
 #include <vector>
 #include <stdlib.h>
 #include <malloc.h>
+
 using namespace std;
 
 
 template<typename KeyType, typename DataType>
 struct SkipListNode
 {
+    //add:xurui
+//    VersionInfo version_infos[MAX_VERSION_NUM];
+//    atomic<int> ref_count;
+//    atomic<int> table_id;
+    //add:e
     pair<KeyType,DataType> keyvalue;
     SkipListNode **next; //指向一个指针数组的指针
 };
@@ -86,6 +92,7 @@ bool SkipList<KeyType,DataType>::Insert(const KeyValue& value)
 {
     Node* node=head_;
     Node* update[MAXLEVEL];
+    //1.find previous node
     for(int i=level_-1;i>=0;i--)
     {
         while(node->next[i]!=NULL)
@@ -96,7 +103,7 @@ bool SkipList<KeyType,DataType>::Insert(const KeyValue& value)
             }
             else if(node->next[i]->keyvalue.first == value.first)
             {
-                cout<<""<<endl;
+                cout<<"we had this key."<<endl;
                 return false;
             }
             else
@@ -116,7 +123,9 @@ bool SkipList<KeyType,DataType>::Insert(const KeyValue& value)
         }
         level_=newlevel;
     }
+    //2.create node
     node=create_node(value,newlevel);
+    //3.insert node
     for(int i=0;i<newlevel;i++)
     {
         node->next[i]=update[i]->next[i];
@@ -180,7 +189,7 @@ SkipListNode<KeyType,DataType>* SkipList<KeyType,DataType>::Get(KeyType key) con
             {
                 return node->next[i];
             }
-            else if(i==0)
+            else if(i==0)//?
             {
                 return node;
             }
@@ -208,7 +217,7 @@ void SkipList<KeyType,DataType>::Scan(KeyType start_key, KeyType end_key, vector
         printf("find!\n");
     }
     nodes.push_back(node);
-    printf("1\n");
+    //printf("1\n");
 //    printf("size=%d",(int)nodes.size());
 
     while(node->next[0]!=NULL)
@@ -285,4 +294,3 @@ bool SkipList<KeyType,DataType>::Delete(KeyType key)
 }
 
 #endif // SKIPLIST_H
-

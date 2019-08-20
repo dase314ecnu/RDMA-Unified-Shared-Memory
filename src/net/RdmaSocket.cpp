@@ -8,7 +8,7 @@
 using namespace std;
 
 RdmaSocket::RdmaSocket(int _cqNum, uint64_t _mm, uint64_t _mmSize, Configuration* _conf, bool _isServer, uint8_t _Mode) :
-DeviceName(NULL), Port(1), ServerPort(10002), GidIndex(0),
+DeviceName(NULL), Port(1), ServerPort(10013), GidIndex(0),
 isRunning(true), isServer(_isServer), cqNum(_cqNum), cqPtr(0),
 mm(_mm), mmSize(_mmSize), conf(_conf), MaxNodeID(1), Mode(_Mode) {
     /* Use multiple cq to parallelly process new request. */
@@ -1039,6 +1039,7 @@ bool RdmaSocket::OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID,
     return true;
 }
 
+//多个write合并成一个写过去，用的循环
 bool RdmaSocket::_RdmaBatchWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, uint32_t imm, int BatchSize) {
     //assert(peers[NodeID]);
     struct ibv_sge sgl[MAX_POST_LIST];
