@@ -72,6 +72,7 @@ libindex.so
 libnet.so
 server
 src/client/tecli.cpp
+src/common.h
 src/index/sc_skiplist.cpp
 src/index/skiplist.cpp
 src/net/BlockBitmap.cpp

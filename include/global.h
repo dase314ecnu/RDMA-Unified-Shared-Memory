@@ -2,6 +2,7 @@
 #ifndef GLOBAL_HEADER
 #define GLOBAL_HEADER
 #include <stdint.h>
+#include <stdlib.h>
 #include <vector>
 #include <mutex>
 #include <condition_variable>

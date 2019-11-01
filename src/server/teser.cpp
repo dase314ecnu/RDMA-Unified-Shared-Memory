@@ -5,6 +5,9 @@ int main()
 {
     Server *server =new Server(2);
     char *p = (char *)server->getMemoryManagerInstance()->getDataAddress();
+//    uint64_t addr[MAX_ADDR_LENGTH];
+
+//    server->getMemoryManagerInstance()->allocateMemoryBlocks(2,1, addr);
     while (true) {
         getchar();
         printf("storage addr = %lx\n", (long)p);

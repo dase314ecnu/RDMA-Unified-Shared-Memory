@@ -46,9 +46,10 @@ int BlockBitmap::getAvailableBlocks(uint64_t num, uint64_t *lists){
             pos = 0;
             Debug::notifyError("Acquire %u!\n",i);
             while(pos < 8){
-                if(!((bits_[i]<<pos)>>(7-pos))){
-                    int tmp = ((bits_[i]<<pos)>>(7-pos))&1;
-                    Debug::notifyError("%d",tmp);
+                //??? if(!((bits_[i]<<pos)>>(7)){
+                if(!((bits_[i]<<pos)>>(7))){
+//                    int tmp = ((bits_[i]<<pos)>>(7-pos))&1;
+//                    Debug::notifyError("%d",tmp);
                     bits_[i] |= (1<<(7-pos));
                     lists[count_] = i*8+pos;
                     this->set(lists[count_]);
@@ -57,7 +58,6 @@ int BlockBitmap::getAvailableBlocks(uint64_t num, uint64_t *lists){
                         //boost::lock_guard<boost::detail::spinlock> unlock(this->bits_lock_);
                         return SUCCESS;
                     }
-
                 }
                 pos++;
             }
@@ -67,6 +67,7 @@ int BlockBitmap::getAvailableBlocks(uint64_t num, uint64_t *lists){
         Debug::notifyError("Failed to allocate enough memory blocks! request: %lu; allocated: %lu",num,count_);
         //boost::lock_guard<boost::detail::spinlock> unlock(this->bits_lock_);
         return ERROR;
+
     }
 }
 

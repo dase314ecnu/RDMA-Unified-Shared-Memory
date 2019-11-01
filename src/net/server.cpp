@@ -144,8 +144,10 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
         {
             //printf("MALLOC111111\n");
             Debug::notifyError("Requested Block Num: %u",send->size);
-            //printf("Requested Block Num: %u",send->size);
-            recv->flag = mem->allocateMemoryBlocks(send->size,recv->addr);
+            printf("Requested Block Num: %u",send->size);
+//            NodeID = get
+            uint16_t NodeID = socket->getNodeID();
+            recv->flag = mem->allocateMemoryBlocks(NodeID, send->size,recv->addr);
             recv->size = send->size;
             //printf("Enter here!\n");
             break;
@@ -156,6 +158,7 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
             printf("Read:%c\n",send->range[0].start_key[0]);
             printf("Read:%c\n",send->range[0].end_key[0]);
             Debug::notifyInfo("range:%lu, %ld",send->range[0].address, send->size);
+            //imm
             recv->flag = skiplist->Insert(send->range,
                                                     send->size);
             break;

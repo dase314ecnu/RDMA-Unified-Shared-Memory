@@ -30,12 +30,13 @@ private:
     uint64_t BlockSize; // the default conf added by weixing
     int shmid;
     Thread2ID th2id;
-    BlockBitmap *BB_;   // the bitmap that record the usage of memory allocation
+    BlockBitmap *blockBitmap;   // the bitmap that record the usage of memory allocation
 
 public:
     MemoryManager(uint64_t mm, uint64_t ServerCount, int DataSize);
     ~MemoryManager();
     int allocateMemoryBlocks(uint64_t num, GAddr* addrList); //allocate memory blocks added by weixing [20190329]
+    int allocateMemoryBlocks(uint16_t NodeID, uint64_t num, GAddr* addrList); //allocate memory blocks
     int freeMemoryBlocks(uint64_t num, GAddr* addrList);    // free up memory blocks added by weixing [20190331]
     uint64_t getDmfsBaseAddress();
     uint64_t getDmfsTotalSize();
