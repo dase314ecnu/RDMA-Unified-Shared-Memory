@@ -70,5 +70,7 @@ give the specified compilers in `./configure`
 
 + do `./configure` again
 
++ add header file in SCLib into target source files `#include "SCLib/client"`
+
 + make -j all & make install
 
