@@ -8,7 +8,7 @@
 /** Implemented functions. **/
 /* Print debug title string.
    @param   str     String of debug title. */
-void Debug::debugTitle(const char *str)
+void Debug::      debugTitle(const char *str)
 {
     if (TITLE == true)                  /* If debug option is set. */
         printf("\033[0;45;1m%s\033[0m\n", str); /* Print debug title string. */
@@ -21,11 +21,10 @@ void Debug::debugTitle(const char *str)
 void Debug::debugItem(const char *format, ...)
 {
     char newFormat[MAX_FORMAT_LEN];
-
     va_list args;
     va_start(args, format);             /* Start of variable arguments. */
 
-    if (DEBUG == true)                  /* If debug option is set. */
+    if (SC_DEBUG == true)                  /* If debug option is set. */
     {
         sprintf(newFormat, "\033[0;42;1m%s\033[0m\n", format); /* Wrap format in a style. */
         vprintf(newFormat, args);       /* Print string of debug item. */

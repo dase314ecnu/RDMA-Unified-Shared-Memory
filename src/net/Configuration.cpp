@@ -36,7 +36,7 @@ uint16_t Configuration::getIDbyIP(string ip) {
 	return ip2id[ip];
 }
 
-unordered_map<uint16_t, string> Configuration::getInstance() {
+map<uint16_t, string> Configuration::getInstance() {
 	return id2ip;
 }
 

@@ -2,13 +2,15 @@
 #ifndef GLOBAL_HEADER
 #define GLOBAL_HEADER
 #include <stdint.h>
+#include <stdlib.h>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
-#include <atomic>
+//#include <mutex>
+//#include <condition_variable>
+//#include <atomic>
 #include <sys/syscall.h>
 #include <unistd.h>
 #include "common.hpp"
+#include <pthread.h>
 
 using namespace std;
 
@@ -24,17 +26,18 @@ static inline uint32_t gettid() {
 //#define LOCALLOGSIZE (40 * 1024 * 1024)
 //#define DISTRIBUTEDLOGSIZE (1024 * 1024)
 
-// add by weixing [20190328]:b
-#define BLOCK_SIZE 4*1024
-// add e
 
-#define CLIENT_MESSAGE_SIZE 1024
+#define CLIENT_MESSAGE_SIZE 1552 //modify huangcc 20180402:b
+
 #define MAX_CLIENT_NUMBER   24
 #define SERVER_MASSAGE_SIZE CLIENT_MESSAGE_SIZE
 #define SERVER_MASSAGE_NUM 8
 #define METADATA_SIZE (1024 )
 #define LOCALLOGSIZE (1024)
 #define DISTRIBUTEDLOGSIZE (1024)
+//add:xurui
+#define DSM_MAX_ROWKEY_COLUMN_NUMBER 1024
+//add:e
 
 // #define TRANSACTION_2PC 1
 #define TRANSACTION_CD 1
@@ -82,9 +85,13 @@ typedef struct {                        /* Extra information structure. */
 } ExtraInformation;
 
 typedef struct {                        /* Range information structure. */
-    char startKey[KEY_LENGTH];          /* StartKey. */
-    char endKey[KEY_LENGTH];            /* EndKey. */
-    uint64_t path;                      /* Addr. */
+    char start_key[KEY_LENGTH];          /* StartKey. */
+    char end_key[KEY_LENGTH];            /* EndKey. */
+    //add huangcc 20190401:b
+//    uint64_t path;                    /* Addr. */
+    uint64_t address;
+    int64_t version;
+    //add:e
 } RangeInformation;
 
 typedef struct : ExtraInformation {     /* General send buffer structure. */
@@ -216,44 +223,98 @@ typedef struct : GeneralReceiveBuffer {
     DirectoryMeta meta;
 } ReadDirectoryMetaReceiveBuffer;
 
+//add:xurui
+struct DSMCellInfo
+      {
+        uint64_t column_id_;
+        int value_[DSM_MAX_ROWKEY_COLUMN_NUMBER];/* one row key has max column number */
+      };
+struct DSMRow
+      {
+        int32_t cell_num_;
+        int32_t row_key_len_;
+        uint64_t table_id_;
+        int row_key_obj_array_[DSM_MAX_ROWKEY_COLUMN_NUMBER];
+        DSMCellInfo cells_[0];
+      };
+//add:e
+
 /* A global queue manager. */
+//template <typename T>
+//class Queue {
+//private:
+//    std::vector<T> queue;
+//    std::mutex m;
+//    std::condition_variable cond;
+//    uint8_t offset = 0;
+//public:
+//    Queue(){}
+//    ~Queue(){}
+//    T pop() {
+//        std::unique_lock<std::mutex> mlock(m);
+//        while (queue.empty()) {
+//            cond.wait(mlock);
+//        }
+//        auto item = queue.front();
+//        queue.erase(queue.begin());
+//        return item;
+//    }
+//    T PopPolling() {
+//        while (offset == 0);
+//        auto item = queue.front();
+//        queue.erase(queue.begin());
+//         __sync_fetch_and_sub(&offset, 1);
+//         return item;
+//    }
+//    void push(T item) {
+//        std::unique_lock<std::mutex> mlock(m);
+//        queue.push_back(item);
+//        mlock.unlock();
+//        cond.notify_one();
+//    }
+//    void PushPolling(T item) {
+//        queue.push_back(item);
+//        __sync_fetch_and_add(&offset, 1);
+//    }
+//};
+
 template <typename T>
 class Queue {
 private:
     std::vector<T> queue;
-    std::mutex m;
-    std::condition_variable cond;
-    uint8_t offset = 0;
+    //pthread_mutex_t _mutex ;
+    uint8_t offset;
 public:
-    Queue(){}
+    Queue(){offset = 0;}
     ~Queue(){}
-    T pop() {
-        std::unique_lock<std::mutex> mlock(m);
-        while (queue.empty()) {
-            cond.wait(mlock);
-        }
-        auto item = queue.front();
-        queue.erase(queue.begin());
-        return item;
-    }
+//    T pop() {
+//        std::unique_lock<std::mutex> mlock(m);
+//        while (queue.empty()) {
+//            cond.wait(mlock);
+//        }
+//        auto item = queue.front();
+//        queue.erase(queue.begin());
+//        return item;
+//    }
     T PopPolling() {
         while (offset == 0);
-        auto item = queue.front();
+        T item = queue.front();
         queue.erase(queue.begin());
          __sync_fetch_and_sub(&offset, 1);
          return item;
     }
-    void push(T item) {
-        std::unique_lock<std::mutex> mlock(m);
-        queue.push_back(item);
-        mlock.unlock();
-        cond.notify_one();
-    }
+//    void push(T item) {
+//        std::unique_lock<std::mutex> mlock(m);
+//        queue.push_back(item);
+//        mlock.unlock();
+//        cond.notify_one();
+//    }
     void PushPolling(T item) {
         queue.push_back(item);
         __sync_fetch_and_add(&offset, 1);
     }
 };
+
 
 /** Redundance check. **/
 #endif

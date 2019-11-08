@@ -10,7 +10,7 @@
 
 #include <infiniband/verbs.h>
 #include <sys/socket.h>
-#include <unordered_map>
+//#include <unordered_map>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
@@ -20,7 +20,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string>
-#include <thread>
+//#include <thread>
+//#include <pthread.h>
 #include <stdint.h>
 #include <assert.h>
 #include "Configuration.hpp"
@@ -46,7 +47,7 @@ typedef struct {
 	uint8_t  gid[16];
 	int 	 sock;
 	uint16_t NodeID;
-	uint64_t counter = 0;
+    uint64_t counter;
 } PeerSockData;
 
 typedef struct {
@@ -93,12 +94,12 @@ private:
 	Configuration 			*conf;			/* System Configuration. */
 	uint16_t				MyNodeID;		/* My NodeID, used for identification. */
 	uint16_t 				MaxNodeID;		/* Max NodeID for client */
-	thread 					Listener;		/* Wait for client connection */
+    void* 				Listener;		/* Wait for client connection */
 	uint8_t					Mode;			/* RC-0, UC-1, UD-2 */
 	int 					ServerCount;	/* The total number of servers */
-	Queue<TransferTask *>   queue[WORKER_NUMBER];/* Used for Data transfer. */
+    Queue<TransferTask *>   queue[WORKER_NUMBER];/* Used for Data transfer. */
 	uint16_t TransferSignal;				/* Used to notify compeletion of data transfer. */
-	thread 					worker[WORKER_NUMBER];
+    void* 				worker[WORKER_NUMBER];
 
 	/* Performance Checker. */
 	uint64_t WriteSize[WORKER_NUMBER];
@@ -118,7 +119,8 @@ private:
 	void RdmaAccept(int fd);
 	int  SocketConnect(uint16_t NodeID);
 	void ServerConnect();
-	bool DataTransferWorker(int id);
+    bool DataTransferWorker(int id);
+    //static void* Data2Worker(void* id_);
 public:
 	struct ibv_mr			*mr;			/* Memory registration handler */
 	RdmaSocket(int _cqNum, uint64_t _mm, uint64_t _mmSize, Configuration* _conf, bool isServer, uint8_t Mode);
@@ -168,7 +170,7 @@ public:
 	bool RdmaRead(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, int TaskID);
 	bool _RdmaBatchRead(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, int BatchSize);
 	bool RemoteRead(uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size);
-	bool InboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size);
+    bool InboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size);
 	/**
 	*RdmaWrite - WRITE data with RDMA_WRITE
 	*@param NodeID, Node ID where to write the data.
@@ -181,7 +183,7 @@ public:
 	bool RdmaWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, uint32_t imm, int TaskID);
 	bool _RdmaBatchWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, uint32_t imm, int BatchSize);
 	bool RemoteWrite(uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size);
-	bool OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size);
+    bool OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size);
 	/**
 	*RdmaFetchAndAdd - Fetch data from DesBuffer to SourceBuffer, and add with "Add" remotely.
 	*@param NodeID, Node ID where to write the data.
@@ -201,7 +203,7 @@ public:
 	*return true on success, false on error.
 	**/
 	bool RdmaCompareAndSwap(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t Compare, uint64_t Swap);
-    //add huangcc
+
     uint64_t get_mem()
     {
         return mm;

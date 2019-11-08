@@ -1,0 +1,1 @@
+/usr/bin/c++  -g -Wall -Wno-deprecated-declarations -Wsign-compare -std=c++11 -pthread -Wall -O0 -DTHREAD -D_FILE_OFFSET_BITS=64 -libverbs -lfuse  -rdynamic CMakeFiles/client.dir/src/client/tecli.cpp.o  -o client -Wl,-rpath,/home/huangcc/xurui/rdma613/rdma_demo_skiplist01 -ldl libindex.so libnet.so -ldl 

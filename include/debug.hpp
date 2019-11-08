@@ -12,7 +12,7 @@
 
 /** Defninitions. **/
 #define MAX_FORMAT_LEN 255
-#define DEBUG false
+#define SC_DEBUG true
 #define TITLE false
 #define TIMER false
 #define CUR  false

@@ -5,10 +5,11 @@
 *
 ***********************************************************************/
 #include "RdmaSocket.hpp"
+#include <thread>
 using namespace std;
 
 RdmaSocket::RdmaSocket(int _cqNum, uint64_t _mm, uint64_t _mmSize, Configuration* _conf, bool _isServer, uint8_t _Mode) :
-DeviceName(NULL), Port(1), ServerPort(5967), GidIndex(0),
+DeviceName(NULL), Port(1), ServerPort(10013), GidIndex(0),
 isRunning(true), isServer(_isServer), cqNum(_cqNum), cqPtr(0),
 mm(_mm), mmSize(_mmSize), conf(_conf), MaxNodeID(1), Mode(_Mode) {
     /* Use multiple cq to parallelly process new request. */
@@ -25,6 +26,7 @@ mm(_mm), mmSize(_mmSize), conf(_conf), MaxNodeID(1), Mode(_Mode) {
         gethostname(hname, sizeof(hname));
         hent = gethostbyname(hname);
         string ip(inet_ntoa(*(struct in_addr*)(hent->h_addr_list[0])));
+//        string ip("10.11.6.129");
         MyNodeID = conf->getIDbyIP(ip);
         Debug::notifyInfo("IP = %s, NodeID = %d", ip.c_str(), MyNodeID);
     } else {
@@ -40,7 +42,8 @@ mm(_mm), mmSize(_mmSize), conf(_conf), MaxNodeID(1), Mode(_Mode) {
         }
         WriteTest = false;
         for (int i = 0; i < WORKER_NUMBER; i ++) {
-            worker[i] = thread(&RdmaSocket::DataTransferWorker, this, i);
+            worker[i] = new thread(&RdmaSocket::DataTransferWorker, this, i);
+            //pthread_create(&worker[i],NULL,Data2Worker,(void*)(&i));
         }
     }
 }
@@ -49,10 +52,12 @@ RdmaSocket::~RdmaSocket() {
     Debug::notifyInfo("Stop RdmaSocket.");
     if (isServer) {
         Debug::debugItem("1");
-        Listener.detach();
+        ((thread*)Listener)->detach();
+        //pthread_detach(Listener);
     } else {
         for (int i = 0; i < WORKER_NUMBER; i++) {
-            worker[i].detach();
+            ((thread*)worker[i])->detach();
+            //pthread_detach(worker[i]);
         }
     }
     Debug::debugItem("2");
@@ -562,7 +567,8 @@ void RdmaSocket::RdmaListen() {
 
     listen(sock,5);
 
-    Listener = thread(&RdmaSocket::RdmaAccept, this, sock);
+    Listener = new thread(&RdmaSocket::RdmaAccept, this, sock);
+    //pthread_create(&Listener,NULL,&RdmaSocket::RdmaAccept,(void*)(&sock));
     /* Connect to other servers. */
     ServerConnect();
 
@@ -822,7 +828,7 @@ bool RdmaSocket::RdmaRead(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBu
     wr.num_sge    = 1;
     wr.opcode     = IBV_WR_RDMA_READ;
     wr.send_flags = IBV_SEND_SIGNALED;
-    wr.wr.rdma.remote_addr = DesBuffer + peers[NodeID]->RegisteredMemory;
+    wr.wr.rdma.remote_addr = DesBuffer; //+ peers[NodeID]->RegisteredMemory;
     wr.wr.rdma.rkey        = peers[NodeID]->rkey;
 
     if (ibv_post_send(peers[NodeID]->qp[TaskID], &wr, &wrBad)) {
@@ -890,6 +896,20 @@ bool RdmaSocket::RemoteRead(uint64_t bufferSend, uint16_t NodeID, uint64_t buffe
     }
 }
 
+//void* RdmaSocket::Data2Worker(void *id_){
+//    int* id = (int*)id_;
+//    TransferTask *task;
+//    while (true) {
+//        task = queue[*id].PopPolling();
+//        if (task->OpType) {
+//            /* Write opration. */
+//            OutboundHamal(*id, task->bufferSend, task->NodeID, task->bufferReceive, task->size);
+//        } else {
+//            InboundHamal(*id, task->bufferSend, task->NodeID, task->bufferReceive, task->size);
+//        }
+//    }
+//}
+
 bool RdmaSocket::DataTransferWorker(int id) {
     TransferTask *task;
     while (true) {
@@ -921,6 +941,7 @@ bool RdmaSocket::InboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, 
         gettimeofday(&start, NULL);
         RdmaRead(NodeID, SendPoolAddr, bufferReceive + TotalSizeSend, SendSize, TaskID + 1);
         PollCompletion(NodeID, 1, &wc);
+        cout<<"send_size"<<SendSize<<endl;
         memcpy((void *)(bufferSend + TotalSizeSend), (void *)SendPoolAddr, SendSize);
         gettimeofday(&end, NULL);
         diff = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
@@ -954,7 +975,7 @@ bool RdmaSocket::RdmaWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesB
         wr.imm_data   = imm;
     }
     wr.send_flags = IBV_SEND_SIGNALED;
-    wr.wr.rdma.remote_addr = DesBuffer + peer->RegisteredMemory;
+    wr.wr.rdma.remote_addr = DesBuffer; //+ peer->RegisteredMemory;
     Debug::debugItem("Post RDMA_WRITE with remote address = %lx", wr.wr.rdma.remote_addr);
     wr.wr.rdma.rkey        = peer->rkey;
     if (ibv_post_send(peer->qp[TaskID], &wr, &wrBad)) {
@@ -992,7 +1013,7 @@ bool RdmaSocket::RemoteWrite(uint64_t bufferSend, uint16_t NodeID, uint64_t buff
 
 bool RdmaSocket::OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size) {
     uint64_t SendPoolSize = 1024 * 1024;
-    uint64_t SendPoolAddr = mm + 4 * 1024 + TaskID * 1024 * 1024;
+    uint64_t SendPoolAddr = mm + 4 * CLIENT_MESSAGE_SIZE + TaskID * 1024 * 1024;
     uint64_t TotalSizeSend = 0;
     uint64_t SendSize;
     struct ibv_wc wc;
@@ -1038,6 +1059,7 @@ bool RdmaSocket::OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID,
     return true;
 }
 
+//多个write合并成一个写过去，用的循环
 bool RdmaSocket::_RdmaBatchWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, uint32_t imm, int BatchSize) {
     //assert(peers[NodeID]);
     struct ibv_sge sgl[MAX_POST_LIST];

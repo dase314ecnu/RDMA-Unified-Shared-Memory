@@ -15,6 +15,9 @@ Server::Server(int _cqSize) :cqSize(_cqSize) {
     Debug::notifyInfo("RPCClient");
     socket->RdmaListen();
     Debug::notifyInfo("RdmaListen");
+    //add huangcc 20190401:b
+    skiplist = new SC_Skiplist();
+    //add:e
     wk = new thread[cqSize]();
     for (int i = 0; i < cqSize; i++)
         wk[i] = thread(&Server::Worker, this, i);
@@ -67,6 +70,7 @@ void Server::RequestPoller(int id) {
     }
     else if (wc[0].opcode == IBV_WC_RECV_RDMA_WITH_IMM)
     {
+//        printf("IBV_WC_RECV_RDMA_WITH_IMM\n");
         NodeID = wc[0].imm_data >> 20;
         if (NodeID == 0XFFF) {
             /* Unlock request, process it directly. */
@@ -91,135 +95,105 @@ void Server::RequestPoller(int id) {
             bufferRecv = mem->getClientMessageAddress(NodeID);
         }
         Debug::notifyError("bufferRecv:%lu\n",bufferRecv);
-        char test[1024];
-        memcpy((void *)test, (void *)bufferRecv, 1024);
-        Debug::notifyError("Server%s\n",test);
-        printf("bufferRecv:%lu\n",bufferRecv);
+//        char test[1024];
+//        memcpy((void *)test, (void *)bufferRecv, 1024);
+//        Debug::notifyError("Server%s\n",test);
+//        printf("bufferRecv:%lu\n",bufferRecv);
 
-        GeneralSendBuffer *send = (GeneralSendBuffer*)bufferRecv;
-        Debug::notifyError("send->message%d\n",send->message);
-        memcpy((void *)test, send->path, 10);
-        Debug::notifyError("Server path%s\n",test);
-        switch (send->message)
-        {
-            case MESSAGE_MALLOC: {
-                break;
-            }
-            case MESSAGE_SCAN: {
-                break;
-            }
-            case MESSAGE_EXPIRE: {
-                break;
-            }
-            default: {
+//        GeneralSendBuffer *send = (GeneralSendBuffer*)bufferRecv;
+        GeneralRequestBuffer *send = (GeneralRequestBuffer*) bufferRecv;
+//        Debug::notifyError("send->message%d\n",send->message);
+//        memcpy((void *)test, send->path, 10);
+//        Debug::notifyError("Server path%s\n",test);
+        ProcessRequest(send, NodeID, offset);
+        //        switch (send->message)
+        //        {
+        ////            case MESSAGE_MALLOC: {
+        ////                break;
+        ////            }
+        ////            case MESSAGE_SCAN: {
+        ////                break;
+        ////            }
+        ////            case MESSAGE_EXPIRE: {
+        ////                break;
+        ////            }
+        //            default: {
 
-                ProcessRequest(send, NodeID, offset);
-            }
-        }
+        //                ProcessRequest(send, NodeID, offset);
+        //            }
+        //        }
 
     }
 }
 
-// add by weixing [20190327]:b
-void Server::ProcessLocalRequest(GeneralReceiveBuffer *send, uint16_t NodeID, uint16_t offset, GAddr *list){
-    char receiveBuffer[CLIENT_MESSAGE_SIZE];
-    uint64_t bufferRecv = (uint64_t)send;
-    return;
-}
-// add e
-
-void Server::ProcessRequest(GeneralSendBuffer *send, uint16_t NodeID, uint16_t offset) {
+//add huangcc 20180401:b
+void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_t offset) {
     char receiveBuffer[CLIENT_MESSAGE_SIZE];
     uint64_t bufferRecv = (uint64_t)send;
     //GeneralReceiveBuffer *recv = (GeneralReceiveBuffer*)receiveBuffer;
-    GeneralSendBuffer *recv = (GeneralSendBuffer*)receiveBuffer;
+    GeneralRequestBuffer *recv = (GeneralRequestBuffer*)receiveBuffer;
     recv->taskID = send->taskID;
     recv->message = MESSAGE_RESPONSE;
-    memcpy(recv->path, "4321", 5);
     uint64_t size = send->sizeReceiveBuffer;
-    if (send->message == MESSAGE_DISCONNECT)
-    {
-        //rdma->disconnect(send->sourceNodeID);
-        return;
-    }
-    else if (send->message == MESSAGE_TEST)
-    {
-        //fs->parseMessage((char*)send, receiveBuffer);
-        //fs->recursivereaddir("/", 0);
-        Debug::notifyError("Contract Receive Buffer, size = %d.", size);
-              //size -= ContractReceiveBuffer(send, recv);
 
-              if (send->message == MESSAGE_RAWREAD)
-              {
-                  ExtentReadSendBuffer *bufferSend = (ExtentReadSendBuffer *)send;
-                  uint64_t *value = (uint64_t *)mem->getDataAddress();
-                  // printf("rawread size = %d\n", (int)bufferSend->size);
-                  *value = 1;
-                  socket->RdmaWrite(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, -1, 1);
-              }
-              else if (send->message == MESSAGE_RAWWRITE)
-              {
-                  ExtentWriteSendBuffer *bufferSend = (ExtentWriteSendBuffer *)send;
-                  // printf("rawwrite size = %d\n", (int)bufferSend->size);
-                  uint64_t *value = (uint64_t *)mem->getDataAddress();
-                  *value = 0;
-                  socket->RdmaRead(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, 1); // FIX ME.
-                  while (*value == 0);
-              }
-              Debug::notifyError("Copy Reply Data, size = %d.", size);
-              memcpy((void *)send, receiveBuffer, size);
-              Debug::notifyError("Select Buffer.");
-              if (NodeID > 0 && NodeID <= ServerCount) {
-                  // Recv Message From Other Server.
-                  bufferRecv = bufferRecv - mm;
-              } else if (NodeID > ServerCount) {
-                  // Recv Message From Client.
-                  bufferRecv = 0;
-              }
-              Debug::notifyError("send = %lx, recv = %lx", send, bufferRecv);
-                  socket->_RdmaBatchWrite(NodeID, (uint64_t)send, bufferRecv, size, 0, 1);
-              // socket->_RdmaBatchReceive(NodeID, mm, 0, 2);
-              socket->RdmaReceive(NodeID, mm + NodeID * 4096, 0);
-              // printf("process end\n");
-    }
-    else if (send->message == MESSAGE_UPDATEMETA)
-    {
-        /* Write unlock. */
-        // UpdateMetaSendBuffer *bufferSend = (UpdateMetaSendBuffer *)send;
-        // fs->unlockWriteHashItem(bufferSend->key, NodeID, bufferSend->offset);
-        return;
-    }
-    else if (send->message == MESSAGE_EXTENTREADEND)
-    {
-        /* Read unlock */
-        // ExtentReadEndSendBuffer *bufferSend = (ExtentReadEndSendBuffer *)send;
-        // fs->unlockReadHashItem(bufferSend->key, NodeID, bufferSend->offset);
-        return;
-    }
-    else
-    {
-  //      fs->parseMessage((char*)send, receiveBuffer);
-        // fs->recursivereaddir("/", 0);
-  /*      Debug::debugItem("Contract Receive Buffer, size = %d.", size);
-        size -= ContractReceiveBuffer(send, recv);
+    cout<<"send->message"<<send->message<<endl;
 
-        if (send->message == MESSAGE_RAWREAD)
+    switch(send->message)
+    {
+        case MESSAGE_MALLOC:
         {
-            ExtentReadSendBuffer *bufferSend = (ExtentReadSendBuffer *)send;
-            uint64_t *value = (uint64_t *)mem->getDataAddress();
-            // printf("rawread size = %d\n", (int)bufferSend->size);
-            *value = 1;
-            socket->RdmaWrite(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, -1, 1);
+            //printf("MALLOC111111\n");
+            Debug::notifyError("Requested Block Num: %u",send->size);
+            printf("Requested Block Num: %u",send->size);
+//            NodeID = get
+            uint16_t NodeID = socket->getNodeID();
+            recv->flag = mem->allocateMemoryBlocks(NodeID, send->size,recv->addr);
+            recv->size = send->size;
+            //printf("Enter here!\n");
+            break;
         }
-        else if (send->message == MESSAGE_RAWWRITE)
+        case MESSAGE_INSERT:
         {
-            ExtentWriteSendBuffer *bufferSend = (ExtentWriteSendBuffer *)send;
-            // printf("rawwrite size = %d\n", (int)bufferSend->size);
-            uint64_t *value = (uint64_t *)mem->getDataAddress();
-            *value = 0;
-            socket->RdmaRead(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, 1); // FIX ME.
-            while (*value == 0);
+            printf("INSERT\n");
+            printf("Read:%c\n",send->range[0].start_key[0]);
+            printf("Read:%c\n",send->range[0].end_key[0]);
+            Debug::notifyInfo("range:%lu, %ld",send->range[0].address, send->size);
+            //imm
+            recv->flag = skiplist->Insert(send->range,
+                                                    send->size);
+            break;
         }
+        case MESSAGE_SCAN:
+        {
+            printf("Scan\n");
+            printf("Read:%c\n",send->range[0].start_key[0]);
+            printf("Read:%c\n",send->range[0].end_key[0]);
+            recv->flag = skiplist->Scan(send->range[0].start_key,
+                                                  send->range[0].end_key,
+                                                  recv->range,
+                                                  recv->size);
+            break;
+        }
+        case MESSAGE_RELEASE:
+        {
+            recv->flag = skiplist->release(send->range[0].start_key,
+                                                     send->range[0].end_key,
+                                                     send->range,
+                                                     send->size);
+            break;
+        }
+        case MESSAGE_EXPIRE:
+        {
+            recv->flag = skiplist->Delete(send->range[0].start_key,
+                                                    send->range[0].end_key);
+            break;
+        }
+        default:
+            break;
+    }
+
+        Debug::debugItem("Contract Receive Buffer, size = %d.", size);
+//        size -= ContractReceiveBuffer(send, recv);
         Debug::debugItem("Copy Reply Data, size = %d.", size);
         memcpy((void *)send, receiveBuffer, size);
         Debug::debugItem("Select Buffer.");
@@ -231,13 +205,186 @@ void Server::ProcessRequest(GeneralSendBuffer *send, uint16_t NodeID, uint16_t o
             bufferRecv = 0;
         }
         Debug::debugItem("send = %lx, recv = %lx", send, bufferRecv);
-            socket->_RdmaBatchWrite(NodeID, (uint64_t)send, bufferRecv, size, 0, 1);
-        // socket->_RdmaBatchReceive(NodeID, mm, 0, 2);
+        socket->_RdmaBatchWrite(NodeID, (uint64_t)send, bufferRecv, size, 0, 1);
         socket->RdmaReceive(NodeID, mm + NodeID * 4096, 0);
-        // printf("process end\n");
-   */
-    }
 }
+
+//void Server::parseMessage(GeneralRequestBuffer *bufferRequest, GeneralRequestBuffer *bufferResponse)
+//{
+//    switch(bufferRequest->message)
+//    {
+//        case MESSAGE_MALLOC:
+//        {
+//            printf("MALLOC111111\n");
+//            Debug::notifyError("Requested Block Num: %u",bufferRequest->size);
+//            //printf("Requested Block Num: %u",bufferRequest->size);
+//            bufferResponse->flag = mem->allocateMemoryBlocks(bufferRequest->size,bufferResponse->addr);
+//            bufferResponse->size = bufferRequest->size;
+//            printf("Enter here!\n");
+//            break;
+//        }
+//        case MESSAGE_INSERT:
+//        {
+//            printf("INSERT\n");
+//            printf("Read:%c\n",bufferRequest->range[0].start_key[0]);
+//            printf("Read:%c\n",bufferRequest->range[0].end_key[0]);
+//            Debug::notifyInfo("range:%lu, %ld",bufferRequest->range[0].address, bufferRequest->size);
+//            bufferResponse->flag = skiplist->Insert(bufferRequest->range,
+//                                                    bufferRequest->size);
+//            break;
+//        }
+//        case MESSAGE_SCAN:
+//        {
+//            printf("Scan\n");
+//            printf("Read:%c\n",bufferRequest->range[0].start_key[0]);
+//            printf("Read:%c\n",bufferRequest->range[0].end_key[0]);
+//            bufferResponse->flag = skiplist->Scan(bufferRequest->range[0].start_key,
+//                                                  bufferRequest->range[0].end_key,
+//                                                  bufferResponse->range,
+//                                                  bufferResponse->size);
+//            break;
+//        }
+//        case MESSAGE_RELEASE:
+//        {
+//            bufferResponse->flag = skiplist->release(bufferRequest->range[0].start_key,
+//                                                     bufferRequest->range[0].end_key,
+//                                                     bufferRequest->range,
+//                                                     bufferRequest->size);
+//            bufferResponse->flag = mem->freeMemoryBlocks(bufferRequest->size,bufferRequest->addr);
+//            break;
+//        }
+//        case MESSAGE_EXPIRE:
+//        {
+//            bufferResponse->flag = skiplist->Delete(bufferRequest->range[0].start_key,
+//                                                    bufferRequest->range[0].end_key);
+//            break;
+//        }
+//        default:
+//            break;
+//    }
+
+//}
+//add:e
+
+// add by weixing [20190327]:b
+void Server::ProcessLocalRequest(GeneralReceiveBuffer *send, uint16_t NodeID, uint16_t offset, GAddr *list){
+    char receiveBuffer[CLIENT_MESSAGE_SIZE];
+    uint64_t bufferRecv = (uint64_t)send;
+    return;
+}
+// add e
+
+
+//void Server::ProcessRequest(GeneralSendBuffer *send, uint16_t NodeID, uint16_t offset) {
+//    char receiveBuffer[CLIENT_MESSAGE_SIZE];
+//    uint64_t bufferRecv = (uint64_t)send;
+//    //GeneralReceiveBuffer *recv = (GeneralReceiveBuffer*)receiveBuffer;
+//    GeneralSendBuffer *recv = (GeneralSendBuffer*)receiveBuffer;
+//    recv->taskID = send->taskID;
+//    recv->message = MESSAGE_RESPONSE;
+//    memcpy(recv->path, "4321", 5);
+//    uint64_t size = send->sizeReceiveBuffer;
+//    if (send->message == MESSAGE_DISCONNECT)
+//    {
+//        //rdma->disconnect(send->sourceNodeID);
+//        return;
+//    }
+//    else if (send->message == MESSAGE_TEST)
+//    {
+//        //fs->parseMessage((char*)send, receiveBuffer);
+//        //fs->recursivereaddir("/", 0);
+//        Debug::notifyError("Contract Receive Buffer, size = %d.", size);
+//              //size -= ContractReceiveBuffer(send, recv);
+
+//              if (send->message == MESSAGE_RAWREAD)
+//              {
+//                  ExtentReadSendBuffer *bufferSend = (ExtentReadSendBuffer *)send;
+//                  uint64_t *value = (uint64_t *)mem->getDataAddress();
+//                  // printf("rawread size = %d\n", (int)bufferSend->size);
+//                  *value = 1;
+//                  socket->RdmaWrite(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, -1, 1);
+//              }
+//              else if (send->message == MESSAGE_RAWWRITE)
+//              {
+//                  ExtentWriteSendBuffer *bufferSend = (ExtentWriteSendBuffer *)send;
+//                  // printf("rawwrite size = %d\n", (int)bufferSend->size);
+//                  uint64_t *value = (uint64_t *)mem->getDataAddress();
+//                  *value = 0;
+//                  socket->RdmaRead(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, 1); // FIX ME.
+//                  while (*value == 0);
+//              }
+//              Debug::notifyError("Copy Reply Data, size = %d.", size);
+//              memcpy((void *)send, receiveBuffer, size);
+//              Debug::notifyError("Select Buffer.");
+//              if (NodeID > 0 && NodeID <= ServerCount) {
+//                  // Recv Message From Other Server.
+//                  bufferRecv = bufferRecv - mm;
+//              } else if (NodeID > ServerCount) {
+//                  // Recv Message From Client.
+//                  bufferRecv = 0;
+//              }
+//              Debug::notifyError("send = %lx, recv = %lx", send, bufferRecv);
+//                  socket->_RdmaBatchWrite(NodeID, (uint64_t)send, bufferRecv, size, 0, 1);
+//              // socket->_RdmaBatchReceive(NodeID, mm, 0, 2);
+//              socket->RdmaReceive(NodeID, mm + NodeID * 4096, 0);
+//              // printf("process end\n");
+//    }
+//    else if (send->message == MESSAGE_UPDATEMETA)
+//    {
+//        /* Write unlock. */
+//        // UpdateMetaSendBuffer *bufferSend = (UpdateMetaSendBuffer *)send;
+//        // fs->unlockWriteHashItem(bufferSend->key, NodeID, bufferSend->offset);
+//        return;
+//    }
+//    else if (send->message == MESSAGE_EXTENTREADEND)
+//    {
+//        /* Read unlock */
+//        // ExtentReadEndSendBuffer *bufferSend = (ExtentReadEndSendBuffer *)send;
+//        // fs->unlockReadHashItem(bufferSend->key, NodeID, bufferSend->offset);
+//        return;
+//    }
+//    else
+//    {
+//  //      fs->parseMessage((char*)send, receiveBuffer);
+//        // fs->recursivereaddir("/", 0);
+//  /*      Debug::debugItem("Contract Receive Buffer, size = %d.", size);
+//        size -= ContractReceiveBuffer(send, recv);
+
+//        if (send->message == MESSAGE_RAWREAD)
+//        {
+//            ExtentReadSendBuffer *bufferSend = (ExtentReadSendBuffer *)send;
+//            uint64_t *value = (uint64_t *)mem->getDataAddress();
+//            // printf("rawread size = %d\n", (int)bufferSend->size);
+//            *value = 1;
+//            socket->RdmaWrite(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, -1, 1);
+//        }
+//        else if (send->message == MESSAGE_RAWWRITE)
+//        {
+//            ExtentWriteSendBuffer *bufferSend = (ExtentWriteSendBuffer *)send;
+//            // printf("rawwrite size = %d\n", (int)bufferSend->size);
+//            uint64_t *value = (uint64_t *)mem->getDataAddress();
+//            *value = 0;
+//            socket->RdmaRead(NodeID, mem->getDataAddress(), 2 * 4096, bufferSend->size, 1); // FIX ME.
+//            while (*value == 0);
+//        }
+//        Debug::debugItem("Copy Reply Data, size = %d.", size);
+//        memcpy((void *)send, receiveBuffer, size);
+//        Debug::debugItem("Select Buffer.");
+//        if (NodeID > 0 && NodeID <= ServerCount) {
+//            // Recv Message From Other Server.
+//            bufferRecv = bufferRecv - mm;
+//        } else if (NodeID > ServerCount) {
+//            // Recv Message From Client.
+//            bufferRecv = 0;
+//        }
+//        Debug::debugItem("send = %lx, recv = %lx", send, bufferRecv);
+//            socket->_RdmaBatchWrite(NodeID, (uint64_t)send, bufferRecv, size, 0, 1);
+//        // socket->_RdmaBatchReceive(NodeID, mm, 0, 2);
+//        socket->RdmaReceive(NodeID, mm + NodeID * 4096, 0);
+//        // printf("process end\n");
+//   */
+//    }
+//}
 
 int Server::getIDbyTID() {
     uint32_t tid = gettid();

@@ -2,7 +2,7 @@
 #define SERVER
 
 #include <thread>
-#include <unordered_map>
+#include <map>
 #include <vector>
 #include "RdmaSocket.hpp"
 #include "Configuration.hpp"
@@ -12,10 +12,13 @@
 #include "common.hpp"
 //#include "filesystem.hpp"
 //#include "TxManager.hpp"
+//add huangcc 20190401:b
+#include "sc_skiplist.h"
+//add:e
 
 using namespace std;
 
-typedef unordered_map<uint32_t, int> Thread2ID;
+typedef map<uint32_t, int> Thread2ID;
 
 typedef struct {
     uint64_t send;
@@ -36,8 +39,16 @@ private:
     Thread2ID th2id;
     vector<RPCTask*> tasks;
     bool UnlockWait;
+    //add huangcc 20190401:b
+    SC_Skiplist *skiplist;
+    //add:e
+
     void Worker(int id);
-    void ProcessRequest(GeneralSendBuffer *send, uint16_t NodeID, uint16_t offset);
+    //add huangcc 20190401:b
+//    void ProcessRequest(GeneralSendBuffer *send, uint16_t NodeID, uint16_t offset);
+    void ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_t offset);
+    void parseMessage(GeneralRequestBuffer *bufferRequest, GeneralRequestBuffer *bufferResponse);
+    //add:e
     // add by weixing [20190327]:b
     void ProcessLocalRequest(GeneralReceiveBuffer *send, uint16_t NodeID, uint16_t offset, GAddr* list);
     // add e

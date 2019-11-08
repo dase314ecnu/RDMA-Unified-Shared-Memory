@@ -7,7 +7,7 @@ MemoryManager::MemoryManager(uint64_t _mm, uint64_t _ServerCount,  int _DataSize
         /* Open Shared Memory. */
         /* Add Data Storage. */
         DMFSTotalSize = (uint64_t)_DataSize;
-        DMFSTotalSize = DMFSTotalSize * 1024 * 1024 * 1024;
+        DMFSTotalSize = DMFSTotalSize * 1024 * 1024;
         //DMFSTotalSize = DMFSTotalSize * 1024; //deleted by weixing
         /* Add Metadata Storage. */
         DMFSTotalSize += METADATA_SIZE;
@@ -36,7 +36,7 @@ MemoryManager::MemoryManager(uint64_t _mm, uint64_t _ServerCount,  int _DataSize
     ServerRecvBaseAddress = ServerSendBaseAddress + SERVER_MASSAGE_SIZE * SERVER_MASSAGE_NUM * ServerCount;
     MetadataBaseAddress = ServerRecvBaseAddress + SERVER_MASSAGE_SIZE * SERVER_MASSAGE_NUM * ServerCount;
     DataBaseAddress = ServerRecvBaseAddress + METADATA_SIZE;
-    memset((void *)DataBaseAddress, 'a', _DataSize*1024);
+    memset((void *)DataBaseAddress, 'f', _DataSize*1024*1024);
     //deleted by weixing [20190329]:b
 //    LocalLogAddress = _DataSize;
 //    LocalLogAddress *= (1024);
@@ -47,8 +47,10 @@ MemoryManager::MemoryManager(uint64_t _mm, uint64_t _ServerCount,  int _DataSize
     SendPoolPointer = (uint8_t *)malloc(sizeof(uint8_t) * ServerCount);
     memset((void *)SendPoolPointer, '\0', sizeof(uint8_t) * ServerCount);
     // add by weixing [20190330]:b
-    uint64_t num = _DataSize/BLOCK_SIZE + 1;
-    BB_ = new BlockBitmap(num);
+    uint64_t num = ((uint64_t)_DataSize * 1024 * 1024)/BLOCK_SIZE;
+    Debug::notifyError("Allocated Num:%lu",num);
+    blockBitmap = new BlockBitmap(num);
+    Debug::notifyError("Allocated Num:%lu",num);
     // add e
 }
 
@@ -115,45 +117,89 @@ void MemoryManager::setID(int ID) {
 int MemoryManager::allocateMemoryBlocks(uint64_t num, GAddr *addrList){
     if(num > MAX_ADDR_NUM){
         Debug::notifyError("The requested num %lu exceeds the MAX_ADDR_NUM %lu",num,MAX_ADDR_NUM);
-        return ERROR;
+        return SC_ERROR;
     }
-    if(NULL == BB_){
+    if(NULL == blockBitmap){
         Debug::notifyError("Failed to allocate memory blocks! BB_ is Nullptr!");
-        return ERROR;
-    }else if(NULL != BB_){
-        if(SUCCESS != (BB_->getAvailableBlocks(num,addrList))){
+        return SC_ERROR;
+    }else if(NULL != blockBitmap){
+        if(SUCCESS != (blockBitmap->getAvailableBlocks(num,addrList))){
             Debug::notifyError("Failed to get available blocks!");
-            return ERROR;
+            return SC_ERROR;
         }else{
+            //printf("Get All Addresses!\n");
             for(uint64_t i = 0; i < num; i++){
                 addrList[i] = DataBaseAddress + addrList[i] * BLOCK_SIZE;
+//                uint64_t flag = 0xFFFFFF;
+
+//                addrList[i] = ;
+
             }
             return SUCCESS;
         }
 
     }else{
-        return ERROR;
+        return SC_ERROR;
     }
 }
 
+int MemoryManager::allocateMemoryBlocks(uint16_t NodeID, uint64_t num, GAddr *addrList){
+    if(num > MAX_ADDR_NUM){
+        Debug::notifyError("The requested num %lu exceeds the MAX_ADDR_NUM %lu",num,MAX_ADDR_NUM);
+        return SC_ERROR;
+    }
+    if(NULL == blockBitmap){
+        Debug::notifyError("Failed to allocate memory blocks! BB_ is Nullptr!");
+        return SC_ERROR;
+    }else if(NULL != blockBitmap){
+        if(SUCCESS != (blockBitmap->getAvailableBlocks(num,addrList))){
+            Debug::notifyError("Failed to get available blocks!");
+            return SC_ERROR;
+        }else{
+            //printf("Get All Addresses!\n");
+            for(uint64_t i = 0; i < num; i++){
+                GAddr temp = DataBaseAddress + addrList[i] * BLOCK_SIZE;
+
+                printf("The temp address is  %ld!\n", temp);
+
+                temp = temp & 0xFFFFFFFFFFFFFFFF;
+                uint64_t flag = (uint64_t)NodeID << 48 | 0x0000FFFFFFFFFFFF & temp;
+                printf("The NodeID is 2 %ld!\n", flag >> 48);
+                addrList[i] = flag;
+                printf("The address is 3 %ld!\n", addrList[i]);
+
+//                int addr = flag >> 48;
+//                printf("The nodeid is 4 %ld!\n", addr);
+
+//                printf("The nodeid is 5 %ld!\n", flag & 0x0000FFFFFFFFFFFF);
+
+            }
+            return SUCCESS;
+        }
+
+    }else{
+        return SC_ERROR;
+    }
+
+}
 int MemoryManager::freeMemoryBlocks(uint64_t num, GAddr *addrList){
-    if(NULL == BB_){
+    if(NULL == blockBitmap){
         Debug::notifyError("Failed to free up memory blocks! BB_ is Nullptr!");
-        return ERROR;
+        return SC_ERROR;
     }else if(0 == num || NULL ==  addrList){
         Debug::notifyError("Failed to free up memory blocks! Parameter is NULL!");
-        return ERROR;
+        return SC_ERROR;
     }else{
         bool tag = false;
         for(uint64_t i = 0; i < num; i++){
-            if(SUCCESS != (BB_->clear(addrList[i]))){
+            if(SUCCESS != (blockBitmap->clear(addrList[i]))){
                 Debug::notifyError("Failed to free up memory block:%lu",addrList[i]);
                 tag = true;
                 continue;
             }
         }
         if(tag){
-            return ERROR;
+            return SC_ERROR;
         }else{
             return SUCCESS;
         }

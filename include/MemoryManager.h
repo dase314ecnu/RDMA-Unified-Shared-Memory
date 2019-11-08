@@ -1,19 +1,19 @@
 #ifndef MEMORYMANAGER
 #define MEMORYMANAGER
 
-#include <unordered_map>
+#include <map>
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include <debug.hpp>
+#include "debug.hpp"
 #include "global.h"
 #include "common.hpp"
 #include "BlockBitmap.h"
 #define SHARE_MEMORY_KEY 78
 
-typedef unordered_map<uint32_t, int> Thread2ID;
+typedef map<uint32_t, int> Thread2ID;
 class MemoryManager {
 private:
     uint64_t ServerCount;
@@ -30,12 +30,13 @@ private:
     uint64_t BlockSize; // the default conf added by weixing
     int shmid;
     Thread2ID th2id;
-    BlockBitmap *BB_;   // the bitmap that record the usage of memory allocation
+    BlockBitmap *blockBitmap;   // the bitmap that record the usage of memory allocation
 
 public:
     MemoryManager(uint64_t mm, uint64_t ServerCount, int DataSize);
     ~MemoryManager();
     int allocateMemoryBlocks(uint64_t num, GAddr* addrList); //allocate memory blocks added by weixing [20190329]
+    int allocateMemoryBlocks(uint16_t NodeID, uint64_t num, GAddr* addrList); //allocate memory blocks
     int freeMemoryBlocks(uint64_t num, GAddr* addrList);    // free up memory blocks added by weixing [20190331]
     uint64_t getDmfsBaseAddress();
     uint64_t getDmfsTotalSize();
