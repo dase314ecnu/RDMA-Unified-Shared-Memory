@@ -38,7 +38,9 @@ class SkipList
         int getRandomLevel();
         Node* Find(KeyType key) const;
         Node* Get(KeyType key) const;
-        void Scan(KeyType start_key, KeyType end_key, vector<Node*> &nodes) const;
+		//add:xurui
+        bool Scan(KeyType start_key, KeyType end_key, vector<Node*> &nodes) const;
+		//add:e
         bool Delete(KeyType key);
 //        bool Delete(Range range);
 
