@@ -77,7 +77,9 @@ uint64_t Client::BlockWrite(uint64_t SourceBuffer, uint64_t BufferSize, uint32_t
     addr_size--;
     printf("getRdmaSocketInstance()->RdmaWrite(NodeID, SourceBuffer, DesBuffer, BufferSize, imm, TaskID)\n");
 //    printf("getRdmaSocketInstance()->RdmaWrite(%d, %d, %d, %d, %d, %d)\n",NodeID,SourceBuffer,DesBuffer, BufferSize, imm, TaskID);
-    return addr[addr_size-1];
+    //add:modified by xr
+    return addr[addr_size];
+    //add:e
   }
   printf("addr_size==0\n");
   return -1;
@@ -200,14 +202,17 @@ bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
             GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
             printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[i].address,
                     rec->range[i].version);
-
-            //Desbuffer Contains 16-bit NodeID + 48-bit Address added by qi
+					
+			//add:modified by xr
+            //Desbuffer Contains 16-bit NodeID + 48-bit Address
             uint16_t NodeID = (uint16_t)(rec->range[i].address >> 48);
+            cout<< "The client  NodeID  is %ld " << NodeID << endl;
             uint64_t address = rec->range[i].address & 0x0000FFFFFFFFFFFF;
             cout<<"nodeid "<<rec->range[i].address<<"address "<<address<<endl;
 
             if(!socket->InboundHamal(0,value,NodeID,address,size))
-            {
+            //add:e
+			{
                 return false;
             }
             else
