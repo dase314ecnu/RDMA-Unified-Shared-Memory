@@ -333,7 +333,12 @@ bool SkipList<KeyType,DataType>::Scan(KeyType start_key, KeyType end_key, vector
     else
     {
         printf("find!\n");
-        nodes.push_back(node);
+		//add:xurui
+        if(node != head_)
+        {
+            nodes.push_back(node);
+        }
+		//add:e
         //printf("1\n");
     //    printf("size=%d",(int)nodes.size());
 
