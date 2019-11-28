@@ -16,12 +16,13 @@ MemoryManager::MemoryManager(uint64_t _mm, uint64_t _ServerCount,  int _DataSize
         /* Add Server Message Pool. */
         DMFSTotalSize += SERVER_MASSAGE_SIZE * SERVER_MASSAGE_NUM * ServerCount;
         Debug::notifyError("total_size=%lu",DMFSTotalSize + LOCALLOGSIZE + DISTRIBUTEDLOGSIZE);
-        shmid = shmget(SHARE_MEMORY_KEY, DMFSTotalSize + LOCALLOGSIZE + DISTRIBUTEDLOGSIZE, IPC_CREAT);
+        //shmid = shmget(SHARE_MEMORY_KEY, DMFSTotalSize + LOCALLOGSIZE + DISTRIBUTEDLOGSIZE, IPC_CREAT);
+        //shmid = malloc(DMFSTotalSize + LOCALLOGSIZE + DISTRIBUTEDLOGSIZE);
         //shmid = shmget(SHARE_MEMORY_KEY,2048, IPC_CREAT);
-        if (shmid == -1) {
-            Debug::notifyError("21::shmget error");
-        }
-        shmptr = shmat(shmid, 0, 0);
+//        if (shmid == -1) {
+//            Debug::notifyError("21::shmget error");
+//        }
+        shmptr = malloc(DMFSTotalSize + LOCALLOGSIZE + DISTRIBUTEDLOGSIZE);
         Debug::notifyError("shmptr = %p",shmptr);
         if (shmptr == (void *)(-1)) {
             Debug::notifyError("25::shmat error");
