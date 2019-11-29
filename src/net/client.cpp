@@ -185,51 +185,50 @@ bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
     uint64_t SendPoolAddr = mm;
     GeneralRequestBuffer *send = (GeneralRequestBuffer*)SendPoolAddr;
     send->message = MESSAGE_SCAN;
-    for(int i = 0; i <= send->size; i++){
-        memcpy(send->range[i].start_key,start_key,KEY_LENGTH);
-        memcpy(send->range[i].end_key,end_key,KEY_LENGTH);
-        //send->range[0].start_key[0]='1';
-        //send->range[0].end_key[0]='5';
-        send->range[i].address = 0;
-        send->size = 0;
-        send->flag = false;
-        if(!RdmaCall(1, (char*)SendPoolAddr, (uint64_t)CLIENT_MESSAGE_SIZE, (char*)recieve, (uint64_t)CLIENT_MESSAGE_SIZE))
-        {
-            return false;
-        }
-        else
-        {
-            GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
-            printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[i].address,
-                    rec->range[i].version);
-					
-			//add:modified by xr
-            //Desbuffer Contains 16-bit NodeID + 48-bit Address
-            uint16_t NodeID = (uint16_t)(rec->range[i].address >> 48);
-            cout<< "The client  NodeID  is %ld " << NodeID << endl;
-            uint64_t address = rec->range[i].address & 0x0000FFFFFFFFFFFF;
-            cout<<"nodeid "<<rec->range[i].address<<"address "<<address<<endl;
+	memcpy(send->range[0].start_key,start_key,KEY_LENGTH);
+	memcpy(send->range[0].end_key,end_key,KEY_LENGTH);
+	//send->range[0].start_key[0]='1';
+	//send->range[0].end_key[0]='5';
+	send->range[0].address = 0;
+	send->size = 0;
+	send->flag = false;
+	if(!RdmaCall(1, (char*)SendPoolAddr, (uint64_t)CLIENT_MESSAGE_SIZE, (char*)recieve, (uint64_t)CLIENT_MESSAGE_SIZE))
+	{
+		return false;
+	}
+	else
+	{
+		GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
+		printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[0].address,
+				rec->range[0].version);
+				
+		//add:modified by xr
+		//Desbuffer Contains 16-bit NodeID + 48-bit Address
+		uint16_t NodeID = (uint16_t)(rec->range[0].address >> 48);
+		cout<< "The client  NodeID  is %ld " << NodeID << endl;
+		uint64_t address = rec->range[0].address & 0x0000FFFFFFFFFFFF;
+		cout<<"nodeid "<<rec->range[0].address<<"address "<<address<<endl;
 
-            if(!socket->InboundHamal(0,value,NodeID,address,size))
-            //add:e
-			{
-                return false;
-            }
-            else
-            {
-                //test for GetNextRow
-                //rec->range[i].GetNextRow();
-                printf("Read:%s\n",value);
-                return true;
-            }
-        }
+		if(!socket->InboundHamal(0,value,NodeID,address,size))
+		//add:e
+		{
+			return false;
+		}
+		else
+		{
+			//test for GetNextRow
+			//rec->range[0].GetNextRow();
+			printf("Read:%s\n",value);
+			return true;
+		}
+	}
 //        if(Cover(start_key,end_key)){
 //            printf("Read:%s\n",value);
 //            return true;
 //        }
 //        else
 //            return false;
-    }
+    
 
     //sleep(1);
 }
