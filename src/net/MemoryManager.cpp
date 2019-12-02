@@ -7,7 +7,7 @@ MemoryManager::MemoryManager(uint64_t _mm, uint64_t _ServerCount,  int _DataSize
         /* Open Shared Memory. */
         /* Add Data Storage. */
         DMFSTotalSize = (uint64_t)_DataSize;
-        DMFSTotalSize = DMFSTotalSize * 1024 * 1024;
+        DMFSTotalSize = DMFSTotalSize * 1024 * 1024 * 1024;
         //DMFSTotalSize = DMFSTotalSize * 1024; //deleted by weixing
         /* Add Metadata Storage. */
         DMFSTotalSize += METADATA_SIZE;
@@ -48,7 +48,7 @@ MemoryManager::MemoryManager(uint64_t _mm, uint64_t _ServerCount,  int _DataSize
     SendPoolPointer = (uint8_t *)malloc(sizeof(uint8_t) * ServerCount);
     memset((void *)SendPoolPointer, '\0', sizeof(uint8_t) * ServerCount);
     // add by weixing [20190330]:b
-    uint64_t num = ((uint64_t)_DataSize * 1024 * 1024)/BLOCK_SIZE;
+    uint64_t num = ((uint64_t)_DataSize * 1024 * 1024 *1024)/BLOCK_SIZE;
     Debug::notifyError("Allocated Num:%lu",num);
     blockBitmap = new BlockBitmap(num);
     Debug::notifyError("Allocated Num:%lu",num);
@@ -161,13 +161,13 @@ int MemoryManager::allocateMemoryBlocks(uint16_t NodeID, uint64_t num, GAddr *ad
             for(uint64_t i = 0; i < num; i++){
                 GAddr temp = DataBaseAddress + addrList[i] * BLOCK_SIZE;
 
-                printf("The temp address is  %ld!\n", temp);
+//                printf("The temp address is  %ld!\n", temp);
 
                 temp = temp & 0xFFFFFFFFFFFFFFFF;
                 uint64_t flag = (uint64_t)NodeID << 48 | 0x0000FFFFFFFFFFFF & temp;
-                printf("The NodeID is 2 %ld!\n", flag >> 48);
+//                printf("The NodeID is 2 %ld!\n", flag >> 48);
                 addrList[i] = flag;
-                printf("The address is 3 %ld!\n", addrList[i]);
+//                printf("The address is 3 %ld!\n", addrList[i]);
 
 //                int addr = flag >> 48;
 //                printf("The nodeid is 4 %ld!\n", addr);
