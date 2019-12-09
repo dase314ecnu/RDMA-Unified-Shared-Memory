@@ -1,0 +1,28 @@
+[0;31mtotal_size=2147576736[0m
+[0;31mshmptr = 0x7f7e0be2f010[0m
+[0;31mAllocated Num:1024[0m
+[0;31mAllocated Num:1024[0m
+[4mDmfsBaseAddress = 7f7e0be2f010, DmfsTotalSize = 800163a0[0m
+[4mIP = 10.11.6.113, NodeID = 1[0m
+[4mOpen IB Device[0m
+[4mCreate Completion Queue[0m
+[4mAllocate Protection Domain[0m
+[4mRegister Memory Region[0m
+[4mRdmaSocket[0m
+[4mRPCClient[0m
+[4mRdmaListen[0m
+[4mWorker 0, tid = 11990[0m
+[4mWorker 1, tid = 11991[0m
+[4mDiscover New Client[0m
+[0;31mgeID:[0m
+[4mCreate Queue Pair with Num = 32709[0m
+[4mCreate Queue Pair with Num = 32710[0m
+[4mCreate Queue Pair with Num = 32711[0m
+[4mClient 2 Joined Us[0m
+[0;42;1mAccepted to Node2[0m
+[0;31mNodeID = 2, offset = 0[0m
+[0;31mServerCount1
+[0m
+[0;31mbufferRecv:140179342028816
+[0m
+send->message26

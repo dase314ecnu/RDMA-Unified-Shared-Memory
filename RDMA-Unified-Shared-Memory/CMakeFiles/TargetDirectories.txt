@@ -1,0 +1,6 @@
+/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory/CMakeFiles/edit_cache.dir
+/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory/CMakeFiles/client.dir
+/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory/CMakeFiles/server.dir
+/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory/CMakeFiles/rebuild_cache.dir
+/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory/CMakeFiles/index.dir
+/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory/CMakeFiles/net.dir

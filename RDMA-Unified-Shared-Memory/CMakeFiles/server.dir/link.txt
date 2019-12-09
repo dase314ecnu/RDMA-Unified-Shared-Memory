@@ -1,0 +1,1 @@
+/usr/bin/c++  -g -Wall -Wno-deprecated-declarations -Wsign-compare -std=c++11 -pthread -Wall -O0 -DTHREAD -D_FILE_OFFSET_BITS=64 -libverbs -lfuse  -rdynamic CMakeFiles/server.dir/src/server/teser.cpp.o  -o server -Wl,-rpath,/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory -ldl libindex.so libnet.so -ldl 

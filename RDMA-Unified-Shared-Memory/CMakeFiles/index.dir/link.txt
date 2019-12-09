@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -g -Wall -Wno-deprecated-declarations -Wsign-compare -std=c++11 -pthread -Wall -O0 -DTHREAD -D_FILE_OFFSET_BITS=64 -libverbs -lfuse  -shared -Wl,-soname,libindex.so -o libindex.so CMakeFiles/index.dir/src/index/sc_skiplist.cpp.o CMakeFiles/index.dir/src/index/skiplist.cpp.o -Wl,-rpath,/home/huangcc/xurui/rtest/RDMA-Unified-Shared-Memory -ldl libnet.so -ldl 
