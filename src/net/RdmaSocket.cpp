@@ -905,9 +905,10 @@ bool RdmaSocket::DataTransferWorker(int id) {
 }
 
 bool RdmaSocket::InboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size) {
-    uint64_t SendPoolSize = 1024 * 1024;
+    uint64_t SendPoolSize = 2 * 1024;
     uint64_t SendPoolAddr = mm + 4 * 1024 + TaskID * 1024 * 1024;
     uint64_t TotalSizeSend = 0;
+    uint64_t startPoolAddr = SendPoolAddr;
     uint64_t SendSize;
     struct ibv_wc wc;
     struct  timeval start, end;
@@ -920,16 +921,21 @@ bool RdmaSocket::InboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, 
         //                SendSize,
         //                1);
         gettimeofday(&start, NULL);
-        RdmaRead(NodeID, SendPoolAddr, bufferReceive + TotalSizeSend, SendSize, TaskID + 1);
+        RdmaRead(NodeID, startPoolAddr, bufferReceive + TotalSizeSend, SendSize, TaskID + 1);
         PollCompletion(NodeID, 1, &wc);
-        cout<<"send_size"<<SendSize<<endl;
-        memcpy((void *)(bufferSend + TotalSizeSend), (void *)SendPoolAddr, SendSize);
+//        cout<<"send_size"<<SendSize<<endl;
+//        memcpy((void *)(bufferSend + TotalSizeSend), (void *)SendPoolAddr, SendSize);
         gettimeofday(&end, NULL);
         diff = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
         ReadSize[TaskID] += SendSize;
         ReadTimeCost[TaskID] += diff;
         TotalSizeSend += SendSize;
+        startPoolAddr += SendSize;
     }
+    //add:xr
+    usleep(100);
+    memcpy((void *)(bufferSend), (void *)(SendPoolAddr), size);
+    //add:e
     __sync_fetch_and_add( &TransferSignal, 1 );
     return true;
 }
@@ -993,17 +999,18 @@ bool RdmaSocket::RemoteWrite(uint64_t bufferSend, uint16_t NodeID, uint64_t buff
 }
 
 bool RdmaSocket::OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size) {
-    uint64_t SendPoolSize = 1024 * 1024;
+    uint64_t SendPoolSize = 2 * 1024;
     uint64_t SendPoolAddr = mm + 4 * CLIENT_MESSAGE_SIZE + TaskID * 1024 * 1024;
     uint64_t TotalSizeSend = 0;
     uint64_t SendSize;
     struct ibv_wc wc;
     struct  timeval start, end;
     uint64_t diff;
+    memcpy((void *)SendPoolAddr, (void *)(bufferSend), size);
     while (TotalSizeSend < size) {
         SendSize = (size - TotalSizeSend) >= SendPoolSize ? SendPoolSize : (size - TotalSizeSend);
         gettimeofday(&start,NULL);
-        memcpy((void *)SendPoolAddr, (void *)(bufferSend + TotalSizeSend), SendSize);
+//        memcpy((void *)SendPoolAddr, (void *)(bufferSend + TotalSizeSend), SendSize);
         // _RdmaBatchWrite(NodeID,
         //                SendPoolAddr,
         //                bufferReceive + TotalSizeSend,
@@ -1012,6 +1019,9 @@ bool RdmaSocket::OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID,
         //                1);
         RdmaWrite(NodeID, SendPoolAddr, bufferReceive + TotalSizeSend, SendSize, -1, TaskID + 1);
         PollCompletion(NodeID, 1, &wc);
+        SendPoolAddr += SendSize;
+        TotalSizeSend += SendSize;
+
         // if (SendSize > 32 * 1024) {
         //     /* Wait Until write finish, May help. */
         //     RdmaRead(NodeID, SendPoolAddr, bufferReceive + TotalSizeSend, 1);
@@ -1022,20 +1032,21 @@ bool RdmaSocket::OutboundHamal(int TaskID, uint64_t bufferSend, uint16_t NodeID,
         WriteSize[TaskID] += SendSize;
         WriteTimeCost[TaskID] += diff;
         /* RdmaWrite Testing. */
-        if (WriteTest) {
-            gettimeofday(&start,NULL);
-            for (int i = 0; i < 10; i ++) {
-                RdmaWrite(NodeID, SendPoolAddr, bufferReceive, 1024 * 1024, -1, TaskID + 1);
-                PollCompletion(NodeID, 1, &wc);
-            }
-            gettimeofday(&end,NULL);
-            diff = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-            printf("diff = %d, size = 10MB.\n", (int)diff);
-            WriteTest = false;
-        }
-        Debug::debugItem("Source Addr = %lx, Des Addr = %lx, Size = %d", SendPoolAddr, bufferReceive + TotalSizeSend, SendSize);
-        TotalSizeSend += SendSize;
+//        if (WriteTest) {
+//            gettimeofday(&start,NULL);
+//            for (int i = 0; i < 10; i ++) {
+//                RdmaWrite(NodeID, SendPoolAddr, bufferReceive, 1024 * 1024, -1, TaskID + 1);
+//                PollCompletion(NodeID, 1, &wc);
+//            }
+//            gettimeofday(&end,NULL);
+//            diff = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
+//            printf("diff = %d, size = 10MB.\n", (int)diff);
+//            WriteTest = false;
+//        }
+//        Debug::debugItem("Source Addr = %lx, Des Addr = %lx, Size = %d", SendPoolAddr, bufferReceive + TotalSizeSend, SendSize);
+//        TotalSizeSend += SendSize;
     }
+    usleep(100);
     __sync_fetch_and_add( &TransferSignal, 1 );
     return true;
 }

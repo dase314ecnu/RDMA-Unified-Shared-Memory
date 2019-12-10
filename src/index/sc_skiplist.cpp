@@ -24,7 +24,8 @@ bool SC_Skiplist::Insert(RangeInformation* block_list, uint8_t block_num)
         /*key*/
         strcpy(key.start_key,block_list[i].start_key);
 
-        if(NULL == (node = skiplist_.Get(key)))
+//        if(NULL == (node = skiplist_.Get(key)))
+        if(NULL == (node = skiplist_.Find(key)))
         {
             Value value;
 //            pair<Key,Value> keyvalue;
@@ -92,12 +93,12 @@ int SC_Skiplist::Scan(char* start, char* end, RangeInformation* block_list, uint
 
     strcpy(start_key.start_key,start);
     strcpy(end_key.start_key,end);
-    printf("1\n");
+//    printf("1\n");
     skiplist_.Scan(start_key, end_key, nodes);
-    printf("2\n");
+//    printf("2\n");
     for(int i=0; i<(int)(nodes.size()); i++)
     {
-        printf("3\n");
+//        printf("3\n");
         latest_index = nodes[i]->keyvalue.second.latest_version_index;
         if(nodes[i]->keyvalue.second.valid)
         {
