@@ -168,7 +168,7 @@ bool SkipList<KeyType,DataType>::Insert(const KeyValue& value)
 
         if(curr == NULL and i-1>=0)
         {
-            curr == pre->next[i-1];
+            curr = pre->next[i-1];
         }
 
         update[i]=pre;
@@ -211,28 +211,67 @@ int SkipList<KeyType,DataType>::getRandomLevel()
 template<typename KeyType,typename DataType>
 SkipListNode<KeyType,DataType>* SkipList<KeyType,DataType>::Find(KeyType key) const
 {
-    Node* node=head_;
+    Node* pre=head_;
+    Node* curr=head_->next[level_-1];
     for(int i=level_-1;i>=0;i--)
     {
-        while(node->next[i]!=NULL)
+//        printf("Find : level_:%d\n",i);
+        while(curr!=NULL)
         {
-            if(node->next[i]->keyvalue.first<key)
+            if(curr->keyvalue.first<key)
             {
-                node=node->next[i];
+//                printf("node->next[i]->keyvalue.first<key;\n");
+                pre = curr;
+                curr=curr->next[i];
             }
-            else if(node->next[i]->keyvalue.first==key)
+            else if(curr->keyvalue.first==key)
             {
-                return node->next[i];
+//                printf("node->next[i]->keyvalue.first==key;\n");
+                return curr;
             }
             else
             {
+                curr=pre->next[i-1];
+//                printf("break;\n");
                 break;
             }
+        }
+
+        if(curr == NULL && i-1>=0)
+        {
+//            printf("curr == NULL,i=%d\n",i);
+            curr = pre->next[i-1];
         }
     }
 
     return NULL;
 }
+
+//template<typename KeyType,typename DataType>
+//SkipListNode<KeyType,DataType>* SkipList<KeyType,DataType>::Find(KeyType key) const
+//{
+//    Node* node=head_;
+//    for(int i=level_-1;i>=0;i--)
+//    {
+//        while(node->next[i]!=NULL)
+//        {
+//            if(node->next[i]->keyvalue.first<key)
+//            {
+//                node=node->next[i];
+//            }
+//            else if(node->next[i]->keyvalue.first==key)
+//            {
+//                return node->next[i];
+//            }
+//            else
+//            {
+//                break;
+//            }
+//        }
+//    }
+
+//    return NULL;
+//}
 
 //template<typename KeyType,typename DataType>
 //SkipListNode<KeyType,DataType>* SkipList<KeyType,DataType>::Get(KeyType key) const
