@@ -32,7 +32,7 @@
 #define MAX_POST_LIST 24
 #define QPS_MAX_DEPTH 128
 #define SIGNAL_BATCH  31
-#define WORKER_NUMBER 2
+#define WORKER_NUMBER 4
 #define QP_NUMBER 	  (1 + WORKER_NUMBER)
 
 /* Important information of node-to-node connection */

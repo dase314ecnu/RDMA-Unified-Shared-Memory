@@ -209,7 +209,8 @@ bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
 		uint64_t address = rec->range[0].address & 0x0000FFFFFFFFFFFF;
 //		cout<<"nodeid "<<rec->range[0].address<<"address "<<address<<endl;
 
-		if(!socket->InboundHamal(0,value,NodeID,address,size))
+//        if(!socket->InboundHamal(0,value,NodeID,address,size))
+        if(!socket->RemoteRead(value,NodeID,address,size))
 		//add:e
 		{
 			return false;

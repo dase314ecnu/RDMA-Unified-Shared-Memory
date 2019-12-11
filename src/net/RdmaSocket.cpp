@@ -869,7 +869,7 @@ bool RdmaSocket::_RdmaBatchRead(uint16_t NodeID, uint64_t SourceBuffer, uint64_t
 bool RdmaSocket::RemoteRead(uint64_t bufferSend, uint16_t NodeID, uint64_t bufferReceive, uint64_t size) {
     int shipSize;
     TransferTask tasks[4];
-    if (size < 4 * 1024 * 1024) {
+    if (size < 4 * 1024) {
         /* Small size read, no need to use multithread to transfer. */
         InboundHamal(0, bufferSend, NodeID, bufferReceive, size);
         return true;
