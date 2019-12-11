@@ -807,7 +807,7 @@ bool RdmaSocket::_RdmaBatchReceive(uint16_t NodeID, uint64_t SourceBuffer, uint6
 
 bool RdmaSocket::RdmaRead(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesBuffer, uint64_t BufferSize, int TaskID) {
     //assert(peers[NodeID]);
-    Debug::notifyError("RdmaRead()");
+//    Debug::notifyError("RdmaRead()");
     struct ibv_sge sg;
     struct ibv_send_wr wr;
     struct ibv_send_wr *wrBad;
@@ -963,7 +963,7 @@ bool RdmaSocket::RdmaWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_t DesB
     }
     wr.send_flags = IBV_SEND_SIGNALED;
     wr.wr.rdma.remote_addr = DesBuffer; //+ peer->RegisteredMemory;
-    Debug::debugItem("Post RDMA_WRITE with remote address = %lx", wr.wr.rdma.remote_addr);
+//    Debug::debugItem("Post RDMA_WRITE with remote address = %lx", wr.wr.rdma.remote_addr);
     wr.wr.rdma.rkey        = peer->rkey;
     if (ibv_post_send(peer->qp[TaskID], &wr, &wrBad)) {
         Debug::notifyError("Send with RDMA_WRITE(WITH_IMM) failed.");
@@ -1086,7 +1086,7 @@ bool RdmaSocket::_RdmaBatchWrite(uint16_t NodeID, uint64_t SourceBuffer, uint64_
 
         //send_wr[w_i].send_flags |= IBV_SEND_INLINE;
         send_wr[w_i].wr.rdma.remote_addr = DesBuffer + peer->RegisteredMemory + w_i * 4096;
-        Debug::debugItem("remote address = %lx, Counter = %d, imm = %lx", send_wr[w_i].wr.rdma.remote_addr, peer->counter, imm);
+//        Debug::debugItem("remote address = %lx, Counter = %d, imm = %lx", send_wr[w_i].wr.rdma.remote_addr, peer->counter, imm);
         send_wr[w_i].wr.rdma.rkey        = peer->rkey;
         peer->counter += 1;
     }
@@ -1175,7 +1175,7 @@ int RdmaSocket::PollCompletion(uint16_t NodeID, int PollNumber, struct ibv_wc *w
             wc->status, (int)wc->wr_id);
         return -1;
     }
-    Debug::debugItem("Find New Completion Message");
+//    Debug::debugItem("Find New Completion Message");
     return count;
 }
 

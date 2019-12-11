@@ -410,12 +410,12 @@ bool SkipList<KeyType,DataType>::Scan(KeyType start_key, KeyType end_key, vector
     node = Get(start_key);
     if(node == NULL)
     {
-        printf("no find!\n");
+//        printf("no find!\n");
         return false;
     }
     else
     {
-        printf("find!\n");
+//        printf("find!\n");
 		//add:xurui
         if(node != head_)
         {

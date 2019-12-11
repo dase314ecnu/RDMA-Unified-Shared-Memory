@@ -28,7 +28,7 @@ static inline uint32_t gettid() {
 
 #define CLIENT_MESSAGE_SIZE 1552 //modify huangcc 20180402:b
 
-#define MAX_CLIENT_NUMBER   24
+#define MAX_CLIENT_NUMBER   52
 #define SERVER_MASSAGE_SIZE CLIENT_MESSAGE_SIZE
 #define SERVER_MASSAGE_NUM 8
 #define METADATA_SIZE (1024 )

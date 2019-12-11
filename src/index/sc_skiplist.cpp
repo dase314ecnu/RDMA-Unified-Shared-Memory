@@ -38,9 +38,9 @@ bool SC_Skiplist::Insert(RangeInformation* block_list, uint8_t block_num)
             value.latest_version_index++;
             value.version_count++;
             value.valid = true;
-            printf("startkey:%s,endkey:%s\n",key.start_key,value.end_key);
-            printf("address:%lu,version:%ld\n",value.version_infos[value.latest_version_index-1].address,
-                    value.version_infos[value.latest_version_index-1].version);
+//            printf("startkey:%s,endkey:%s\n",key.start_key,value.end_key);
+//            printf("address:%lu,version:%ld\n",value.version_infos[value.latest_version_index-1].address,
+//                    value.version_infos[value.latest_version_index-1].version);
 
 //            printf("8\n");
 //            pair<int,int> test=make_pair(1,1);
@@ -53,17 +53,17 @@ bool SC_Skiplist::Insert(RangeInformation* block_list, uint8_t block_num)
             skiplist_.Insert(keyvalue);
 //            printf("10\n");
 
-            node = NULL;
-            node = skiplist_.Get(key);
-            if(node == NULL)
-            {
-                printf("no find!\n");
-            }
-            else
-            {
-                printf("find!\n");
-                printf("endkey=%ld",node->keyvalue.second.version_count);
-            }
+//            node = NULL;
+//            node = skiplist_.Get(key);
+//            if(node == NULL)
+//            {
+//                printf("no find!\n");
+//            }
+//            else
+//            {
+////                printf("find!\n");
+////                printf("endkey=%ld",node->keyvalue.second.version_count);
+//            }
         }
         else
         {
@@ -73,7 +73,7 @@ bool SC_Skiplist::Insert(RangeInformation* block_list, uint8_t block_num)
             node->keyvalue.second.latest_version_index++;
             node->keyvalue.second.version_count++;
             node->keyvalue.second.valid = true;
-            printf("duplicated endkey=%ld",node->keyvalue.second.version_count);
+//            printf("duplicated endkey=%ld",node->keyvalue.second.version_count);
         }
 
     }

@@ -4,66 +4,210 @@
 
 int main()
 {
+////  1.basic testcase
+//    Client *client = new Client();
+////    uint64_t DmfsDataOffset;
+////    DmfsDataOffset =  CLIENT_MESSAGE_SIZE * MAX_CLIENT_NUMBER;
+////    DmfsDataOffset += SERVER_MASSAGE_SIZE * SERVER_MASSAGE_NUM * client->getConfInstance()->getServerCount();
+////    DmfsDataOffset += METADATA_SIZE;
 
-    Client *client = new Client();
-//    uint64_t DmfsDataOffset;
-//    DmfsDataOffset =  CLIENT_MESSAGE_SIZE * MAX_CLIENT_NUMBER;
-//    DmfsDataOffset += SERVER_MASSAGE_SIZE * SERVER_MASSAGE_NUM * client->getConfInstance()->getServerCount();
-//    DmfsDataOffset += METADATA_SIZE;
+//    char value[BLOCK_SIZE];
+//    memset(value,0,BLOCK_SIZE);
 
+//    //write value
+//    char alphavalue[BLOCK_SIZE];
+//    memset(alphavalue,'b',BLOCK_SIZE);
+//    char start_key[KEY_LENGTH];
+//    char end_key[KEY_LENGTH];
+//    int* start = (int*)(start_key);
+//    int* end = (int*)(end_key);
+
+//    for(int i=0; i<1;i++)
+//    {
+//        *start = i;
+//        *end = i+5;
+//        printf("start_key：%s ",start_key);
+//        printf("end_key：%s ",end_key);
+//        client->Write((uint64_t)alphavalue,BLOCK_SIZE,start_key,end_key);
+//    }
+
+
+//    for(int i=0; i<1;i++)
+//    {
+//        *start = i;
+//        *end = i+5;
+//        client->Read((uint64_t)value,BLOCK_SIZE,start_key,end_key);
+//    }
+
+//    printf("value:\n");
+//    for(int i=0; i<BLOCK_SIZE; i++)
+//    {
+//        printf("%c",value[i]);
+//    }
+
+//    return 0;
+//}
+    //2. 2M read testcase
+//    Client *client = new Client();
+////    uint64_t DmfsDataOffset;
+////    DmfsDataOffset =  CLIENT_MESSAGE_SIZE * MAX_CLIENT_NUMBER;
+////    DmfsDataOffset += SERVER_MASSAGE_SIZE * SERVER_MASSAGE_NUM * client->getConfInstance()->getServerCount();
+////    DmfsDataOffset += METADATA_SIZE;
+
+//    char value[BLOCK_SIZE];
+//    memset(value,0,BLOCK_SIZE);
+
+//    //2.write value
+//    char alphavalue[BLOCK_SIZE];
+////    memset(alphavalue,'b',BLOCK_SIZE);
+//    //printf("Read:%s\n",alphavalue);
+//    //memcpy((void *)SendPoolAddr, (void *)(alphavalue), BLOCK_SIZE);
+//    char start_key[KEY_LENGTH];
+//    char end_key[KEY_LENGTH];
+//    int* start = (int*)(start_key);
+//    int* end = (int*)(end_key);
+//    timeval tstart,tend;
+////    int test_size = 1*1024*1024;
+//    int test_size = 2*1024*1024;
+
+
+////    int m =65;
+////    for(int j=0;j<1024;j++)
+////    {
+////        for(int i=0; i<2048; i++)
+////        {
+////            alphavalue[i+j*2048] = m;
+//////            printf("%c ",alphavalue[i]);
+////        }
+////        m++;
+////    }
+
+////    sleep(1);
+//    while(true)
+//    {
+//        for(int i=0; i<1;i++)
+//        {
+//    //        Client *client = new Client();
+//            //start_key[0] = 'b';
+//            //end_key[0] = 'e';
+//            printf("start_key：%s ",start_key);
+//            printf("end_key：%s ",end_key);
+//            clock_t begin = clock();
+//            client->Write((uint64_t)alphavalue,test_size,start_key,end_key);
+//            clock_t end = clock();
+//            printf("write %d bytes in %d us\n", test_size, (int)(end-begin));
+//        }
+//    //    sleep(2);
+
+//        for(int i=0; i<1;i++)
+//        {
+//    //        Client *client = new Client();
+//            //start_key[0] = 'b';
+//            //end_key[0] = 'e';
+//            memset(value,0,BLOCK_SIZE);
+//            gettimeofday(&tstart,NULL);
+//    //        clock_t begin = clock();
+//            client->Read((uint64_t)value,test_size,start_key,end_key);
+//    //        clock_t end = clock();
+//            gettimeofday(&tend,NULL);
+//            cout << "read "<< test_size << " bytes in " << tend.tv_sec-tstart.tv_sec << "s" << tend.tv_usec-tstart.tv_usec<<"us"<<endl;
+//    //        printf("read %d bytes in %d us\n", test_size, (int)(end-begin));
+//            if(memcmp(alphavalue, value, test_size) == 0) {
+//                        printf("read success, the same\n");
+//            }
+//            else {
+//                int same_size = 0;
+//                int first_not_same = 0;
+//                int last_not_same = 0;
+//                //for(same_size = 0; same_size < test_size; same_size++) if(alphavalue[same_size] != value[same_size]) break;
+//                //for(same_size = 0; same_size < test_size; same_size++) if(alphavalue[same_size] != value[same_size]) printf("%d,", same_size);
+//                // write to file
+//                ofstream written, readed;
+//                written.open ("write.txt");
+//                written << string(alphavalue, test_size);
+//                written.close();
+//                readed.open ("read.txt");
+//                readed << string(value, test_size);
+//                readed.close();
+//                for(int k = 0; k < test_size; k++) {
+//                    if(alphavalue[k] != value[k]) {
+//                        if(first_not_same == 0) first_not_same = k;
+//                        last_not_same = k;
+//                    }
+//                    else same_size++;
+//                }
+//                printf("\n\n read failed, not the same, same_size=%d, first_not_same=%d, last_not_same=%d\n", same_size, first_not_same, last_not_same);
+//            }
+//    //        sleep(1);
+//        }
+//    }
+    //3. test case for random of start_key
     char value[BLOCK_SIZE];
     memset(value,0,BLOCK_SIZE);
 
     //2.write value
     char alphavalue[BLOCK_SIZE];
     memset(alphavalue,'b',BLOCK_SIZE);
+    srand(time(NULL));
+    int test_size = 2*1024*1024;
+    //for(int i=0; i<test_size; i++) alphavalue[i] = char(rand() % 127);
     //printf("Read:%s\n",alphavalue);
     //memcpy((void *)SendPoolAddr, (void *)(alphavalue), BLOCK_SIZE);
     char start_key[KEY_LENGTH];
     char end_key[KEY_LENGTH];
-    int* start = (int*)(start_key);
-    int* end = (int*)(end_key);
+    memset(start_key, 0, KEY_LENGTH);
+    memset(end_key, 0, KEY_LENGTH);
+    printf("BLOCK_SIZE=%d\n", BLOCK_SIZE);
 
-    for(int i=0; i<5;i++)
-    {
-        *start = i;
-        *end = i+5;
-        printf("start_key：%s ",start_key);
-        printf("end_key：%s ",end_key);
-        client->Write((uint64_t)alphavalue,BLOCK_SIZE,start_key,end_key);
-    }
+    clock_t start, end;
+    Client *client = new Client();
 
-    //for(int i=0; i<10; i++)
-    //{
-        for(int i=0; i<3;i++)
+    while(true) {
+        usleep(1);
+        for(int i=0; i<test_size; i++) alphavalue[i] = char(rand() % 127);
+        for(int i=0; i<KEY_LENGTH-2; i++) start_key[i] = end_key[i] = '0' + rand() % 10;
+        start_key[KEY_LENGTH-2] = 'a';
+        end_key[KEY_LENGTH-2] = 'b';
+        sleep(1);
+        for(int i=0; i<1;i++)
         {
-            *start = i;
-            *end = i+5;
-            client->Read((uint64_t)value,BLOCK_SIZE,start_key,end_key);
+            //Client c; Client* client = &c;
+            auto t_start = std::chrono::high_resolution_clock::now();
+            //Client *client = new Client();
+            printf("start_key：%s ",start_key);
+            printf("end_key：%s ",end_key);
+
+
+            client->Write((uint64_t)alphavalue,test_size,start_key,end_key);
+            auto t_end = std::chrono::high_resolution_clock::now();
+
+            std::cout << std::fixed << std::setprecision(2)
+                      << "write Wall clock time passed: "
+                      << std::chrono::duration<double, std::milli>(t_end-t_start).count()
+                      << " ms\n";
         }
-    //}
 
-    printf("value:\n");
-    for(int i=0; i<BLOCK_SIZE; i++)
-    {
-        printf("%c",value[i]);
+        for(int i=0; i<1;i++)
+        {
+            //Client c; Client* client = &c;
+            auto t_start = std::chrono::high_resolution_clock::now();
+            //Client *client = new Client();
+
+            client->Read((uint64_t)value,test_size,start_key,end_key);
+            auto t_end = std::chrono::high_resolution_clock::now();
+
+            std::cout << std::fixed << std::setprecision(2)
+                      << "read Wall clock time passed: "
+                      << std::chrono::duration<double, std::milli>(t_end-t_start).count()
+                    << " ms\n";
+        }
+        if(memcmp(alphavalue, value, test_size) == 0) {
+            printf("\n\n read success, the same\n");
+        }
+        else {
+            printf("\n\n read failed, not the same\n");
+        }
     }
-
-/*    uint64_t address = client->BlockWrite(SendPoolAddr,size,-1,0,1);
-
-    GeneralRequestBuffer *send = (GeneralRequestBuffer*)SendPoolAddr;
-    send->message = MESSAGE_INSERT;
-    send->range[0].start_key[0]='1';
-    send->range[0].end_key[0]='5';
-    send->range[0].address = address;
-    send->size = 1;
-    send->flag = false;
-    client->IndexWrite(SendPoolAddr,size,1);
-    //client->RdmaCall(1, (char*)send, size, value, size);
-    printf("RdmaCall:%d,%d,%lu,%ld\n",receive->message,receive->flag,receive->range[0].address,
-            receive->range[0].version);
-
-    printf("Write\n");*/
 
     return 0;
 }

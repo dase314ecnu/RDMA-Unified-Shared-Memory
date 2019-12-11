@@ -4,7 +4,7 @@ Server::Server(int _cqSize) :cqSize(_cqSize) {
     mm = 0;
     UnlockWait = false;
     conf = new Configuration();
-    mem = new MemoryManager(mm, conf->getServerCount(), 2);
+    mem = new MemoryManager(mm, conf->getServerCount(), 20);
     mm = mem->getDmfsBaseAddress();
     Debug::notifyInfo("DmfsBaseAddress = %lx, DmfsTotalSize = %lx",
         mem->getDmfsBaseAddress(), mem->getDmfsTotalSize());
@@ -80,12 +80,12 @@ void Server::RequestPoller(int id) {
         }
         NodeID = (uint16_t)(wc[0].imm_data << 16 >> 16);
         offset = (uint16_t)(wc[0].imm_data >> 16);
-        Debug::notifyError("NodeID = %d, offset = %d", NodeID, offset);
+//        Debug::notifyError("NodeID = %d, offset = %d", NodeID, offset);
         count += 1;
-        Debug::notifyError("ServerCount%d\n",ServerCount);
+//        Debug::notifyError("ServerCount%d\n",ServerCount);
         if (NodeID > 0 && NodeID <= ServerCount)
         {
-            Debug::notifyError("NodeID"+NodeID);
+//            Debug::notifyError("NodeID"+NodeID);
             /* Recv Message From Other Server. */
             bufferRecv = mem->getServerRecvAddress(NodeID, offset);
         }
@@ -94,7 +94,7 @@ void Server::RequestPoller(int id) {
             /* Recv Message From Client. */
             bufferRecv = mem->getClientMessageAddress(NodeID);
         }
-        Debug::notifyError("bufferRecv:%lu\n",bufferRecv);
+//        Debug::notifyError("bufferRecv:%lu\n",bufferRecv);
 //        char test[1024];
 //        memcpy((void *)test, (void *)bufferRecv, 1024);
 //        Debug::notifyError("Server%s\n",test);
@@ -143,8 +143,8 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
         case MESSAGE_MALLOC:
         {
             //printf("MALLOC111111\n");
-            Debug::notifyError("Requested Block Num: %u",send->size);
-            printf("Requested Block Num: %u",send->size);
+//            Debug::notifyError("Requested Block Num: %u",send->size);
+//            printf("Requested Block Num: %u",send->size);
 //            NodeID = get
             uint16_t NodeID = socket->getNodeID();
             recv->flag = mem->allocateMemoryBlocks(NodeID, send->size,recv->addr);
@@ -155,9 +155,9 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
         case MESSAGE_INSERT:
         {
             printf("INSERT\n");
-            printf("Read:%c\n",send->range[0].start_key[0]);
-            printf("Read:%c\n",send->range[0].end_key[0]);
-            Debug::notifyInfo("range:%lu, %ld",send->range[0].address, send->size);
+//            printf("Read:%c\n",send->range[0].start_key[0]);
+//            printf("Read:%c\n",send->range[0].end_key[0]);
+//            Debug::notifyInfo("range:%lu, %ld",send->range[0].address, send->size);
             //imm
             recv->flag = skiplist->Insert(send->range,
                                                     send->size);
@@ -166,8 +166,8 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
         case MESSAGE_SCAN:
         {
             printf("Scan\n");
-            printf("Read:%c\n",send->range[0].start_key[0]);
-            printf("Read:%c\n",send->range[0].end_key[0]);
+//            printf("Read:%c\n",send->range[0].start_key[0]);
+//            printf("Read:%c\n",send->range[0].end_key[0]);
             recv->flag = skiplist->Scan(send->range[0].start_key,
                                                   send->range[0].end_key,
                                                   recv->range,
@@ -192,11 +192,11 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
             break;
     }
 
-        Debug::debugItem("Contract Receive Buffer, size = %d.", size);
+//        Debug::debugItem("Contract Receive Buffer, size = %d.", size);
 //        size -= ContractReceiveBuffer(send, recv);
-        Debug::debugItem("Copy Reply Data, size = %d.", size);
+//        Debug::debugItem("Copy Reply Data, size = %d.", size);
         memcpy((void *)send, receiveBuffer, size);
-        Debug::debugItem("Select Buffer.");
+//        Debug::debugItem("Select Buffer.");
         if (NodeID > 0 && NodeID <= ServerCount) {
             // Recv Message From Other Server.
             bufferRecv = bufferRecv - mm;
@@ -204,7 +204,7 @@ void Server::ProcessRequest(GeneralRequestBuffer *send, uint16_t NodeID, uint16_
             // Recv Message From Client.
             bufferRecv = 0;
         }
-        Debug::debugItem("send = %lx, recv = %lx", send, bufferRecv);
+//        Debug::debugItem("send = %lx, recv = %lx", send, bufferRecv);
         socket->_RdmaBatchWrite(NodeID, (uint64_t)send, bufferRecv, size, 0, 1);
         socket->RdmaReceive(NodeID, mm + NodeID * 4096, 0);
 }

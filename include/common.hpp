@@ -61,7 +61,7 @@ struct nrfsfileattr
 /** Definitions. **/
 #define MAX_FILE_EXTENT_COUNT 20        /* Max extent count in meta of a file. */
 //#define BLOCK_SIZE (1 * 1024 * 1024)  /* Current block size in bytes. */
-#define BLOCK_SIZE (2 * 1024)
+#define BLOCK_SIZE (2 * 1024 * 1024)
 #define MAX_FILE_NAME_LENGTH 50         /* Max file name length. */
 #define MAX_DIRECTORY_COUNT 60          /* Max directory count. */
 

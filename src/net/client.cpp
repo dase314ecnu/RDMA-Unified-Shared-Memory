@@ -52,30 +52,30 @@ bool Client::Write(uint64_t SourceBuffer, uint64_t size, char* start_key, char* 
 {
      uint64_t address = BlockWrite(SourceBuffer,size,-1,0,1);
 
-     cout<<"address:"<<address<<" "<<endl;
+//     cout<<"address:"<<address<<" "<<endl;
      IndexWrite(start_key,end_key,address);
 }
 
 uint64_t Client::BlockWrite(uint64_t SourceBuffer, uint64_t BufferSize, uint32_t imm, int TaskID, uint16_t NodeID){
   if(addr_size==0){
       BlockAlloc(10); //BAlloc->BlockAlloc
-      printf("addr_size==0\n");
+//      printf("addr_size==0\n");
   }
 
   uint64_t DesBuffer = addr[addr_size-1];
-  cout<< "The client des addr is %ld " << DesBuffer << endl;
+//  cout<< "The client des addr is %ld " << DesBuffer << endl;
 
   //Desbuffer Contains 16-bit NodeID + 48-bit Address
   NodeID = (uint16_t)(DesBuffer >> 48);
-  cout<< "The client  NodeID  is %ld " << NodeID << endl;
+//  cout<< "The client  NodeID  is %ld " << NodeID << endl;
   DesBuffer = DesBuffer & 0x0000FFFFFFFFFFFF;
-  cout<< "The client true addr  is %ld " << DesBuffer << endl;
+//  cout<< "The client true addr  is %ld " << DesBuffer << endl;
 
-  if(socket->OutboundHamal(1, SourceBuffer, NodeID, DesBuffer, BufferSize))
+  if(socket->OutboundHamal(0, SourceBuffer, NodeID, DesBuffer, BufferSize))
   //if(getRdmaSocketInstance()->RdmaWrite(NodeID, SourceBuffer, DesBuffer, BufferSize, imm, TaskID))
   {
     addr_size--;
-    printf("getRdmaSocketInstance()->RdmaWrite(NodeID, SourceBuffer, DesBuffer, BufferSize, imm, TaskID)\n");
+//    printf("getRdmaSocketInstance()->RdmaWrite(NodeID, SourceBuffer, DesBuffer, BufferSize, imm, TaskID)\n");
 //    printf("getRdmaSocketInstance()->RdmaWrite(%d, %d, %d, %d, %d, %d)\n",NodeID,SourceBuffer,DesBuffer, BufferSize, imm, TaskID);
     //add:modified by xr
     return addr[addr_size];
@@ -92,7 +92,7 @@ bool Client::BlockAlloc(int size){
     //choose which server. ID is random integer mod ServerCount add by qi 20191015 :b
     int server_id = 1;
     server_id = rand() % getConfInstance()->getServerCount() + 1;
-    printf("Block allocated server id is %d \n", server_id);
+//    printf("Block allocated server id is %d \n", server_id);
 
     char recieve_buffer[CLIENT_MESSAGE_SIZE];
     memset(recieve_buffer,0,CLIENT_MESSAGE_SIZE);
@@ -101,7 +101,7 @@ bool Client::BlockAlloc(int size){
     send->message = MESSAGE_MALLOC;
     send->size = size;
 
-    cout<<"GeneralRequestBuffer_size"<<sizeof(GeneralRequestBuffer)<<endl;
+//    cout<<"GeneralRequestBuffer_size"<<sizeof(GeneralRequestBuffer)<<endl;
 
     bool fal = RdmaCall(server_id, (char*)send, (uint64_t)CLIENT_MESSAGE_SIZE,recieve_buffer, (uint64_t)CLIENT_MESSAGE_SIZE);
 //    RdmaCall(1, (char*)send, size, value, size);
@@ -111,7 +111,7 @@ bool Client::BlockAlloc(int size){
             addr_size = receive->size;
             for(int i=0;i<addr_size;i++){
                 addr[i] = receive->addr[i];
-                printf("MESSAGE_MALLOC:%lu,%lu\n",addr[i],addr_size);
+//                printf("MESSAGE_MALLOC:%lu,%lu\n",addr[i],addr_size);
             }
 
             return true;
@@ -136,7 +136,7 @@ bool Client::IndexWrite(char * start_key, char* end_key, uint64_t address){//uin
     if(fal){
         GeneralRequestBuffer *receive = (GeneralRequestBuffer*)recieve_buffer;
         if(receive->message==SUCCESS){
-            printf("MESSAGE_INSERT:%d,%d\n",receive->message,receive->size);
+//            printf("MESSAGE_INSERT:%d,%d\n",receive->message,receive->size);
             return true;
         }
     }
@@ -199,15 +199,15 @@ bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
 	else
 	{
 		GeneralRequestBuffer *rec = (GeneralRequestBuffer*)recieve;
-		printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[0].address,
-				rec->range[0].version);
+//		printf("RdmaCall:%d,%d,%lu,%ld\n",rec->message,rec->flag,rec->range[0].address,
+//				rec->range[0].version);
 				
 		//add:modified by xr
 		//Desbuffer Contains 16-bit NodeID + 48-bit Address
 		uint16_t NodeID = (uint16_t)(rec->range[0].address >> 48);
-		cout<< "The client  NodeID  is %ld " << NodeID << endl;
+//		cout<< "The client  NodeID  is %ld " << NodeID << endl;
 		uint64_t address = rec->range[0].address & 0x0000FFFFFFFFFFFF;
-		cout<<"nodeid "<<rec->range[0].address<<"address "<<address<<endl;
+//		cout<<"nodeid "<<rec->range[0].address<<"address "<<address<<endl;
 
 		if(!socket->InboundHamal(0,value,NodeID,address,size))
 		//add:e
@@ -218,7 +218,7 @@ bool Client::Read(uint64_t value, uint64_t size, char* start_key, char* end_key)
 		{
 			//test for GetNextRow
 			//rec->range[0].GetNextRow();
-			printf("Read:%s\n",value);
+//			printf("Read:%s\n",value);
 			return true;
 		}
 	}
@@ -329,8 +329,8 @@ bool Client::RdmaCall(uint16_t DesNodeID, char *bufferSend, uint64_t lengthSend,
     asm volatile ("sfence\n" : : );
     temp = (uint32_t)offset;
     imm = imm + (temp << 16);
-    Debug::notifyError("sendBuffer = %lx, receiveBuffer = %lx, remoteRecvBuffer = %lx, ReceiveSize = %d",
-        sendBuffer, receiveBuffer, remoteRecvBuffer, lengthReceive);
+//    Debug::notifyError("sendBuffer = %lx, receiveBuffer = %lx, remoteRecvBuffer = %lx, ReceiveSize = %d",
+//        sendBuffer, receiveBuffer, remoteRecvBuffer, lengthReceive);
     if (send->message == MESSAGE_DISCONNECT
         || send->message == MESSAGE_UPDATEMETA
         || send->message == MESSAGE_EXTENTREADEND) {
@@ -340,7 +340,7 @@ bool Client::RdmaCall(uint16_t DesNodeID, char *bufferSend, uint64_t lengthSend,
     }
     char test[1024];
     memcpy((void *)test, send->path, 10);
-    Debug::notifyError("Client path%s\n",test);
+//    Debug::notifyError("Client path%s\n",test);
     socket->_RdmaBatchWrite(DesNodeID, sendBuffer, remoteRecvBuffer, lengthSend, imm, 1);
     if (isServer) {
         while (recv->message == MESSAGE_INVALID || recv->message != MESSAGE_RESPONSE)
